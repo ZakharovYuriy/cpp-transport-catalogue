@@ -8,6 +8,7 @@ namespace transport {
 		double StringToDouble(const std::string& s);
 	}
 	namespace user_interaction {
-		void ReadDataBase(int number_of_requests_creature, ::transport::Catalogue& transport);
+		void ReadDataBase(std::istream& i_stream, int number_of_requests_create, ::transport::Catalogue& transport);
+		void RequestToTheDatabase(std::istream& i_stream, int number_of_requests, ::transport::Catalogue& transport);
 	}
 }

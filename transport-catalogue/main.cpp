@@ -10,15 +10,7 @@ int main() {
 	int number_of_requests = 0;
 	::transport::Catalogue transport;
 	cin >> number_of_requests;
-	::transport::user_interaction::ReadDataBase(number_of_requests, transport);
+	::transport::user_interaction::ReadDataBase(cin,number_of_requests, transport);
 	cin >> number_of_requests;
-	for (int number = 0; number <=number_of_requests; ++number) {
-		auto [type, query] = ::transport::user_interaction::ReadRequests();
-		if (type=="Bus") {
-			transport.GetBusInfo(query);
-		}
-		if (type == "Stop") {
-			transport.GetStopInfo(query);
-		}
-	}
+	::transport::user_interaction::RequestToTheDatabase(cin, number_of_requests, transport);
 }

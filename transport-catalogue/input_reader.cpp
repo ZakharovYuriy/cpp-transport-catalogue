@@ -24,17 +24,17 @@ namespace transport {
         }
     }
     namespace user_interaction {
-        void ReadDataBase(int number_of_requests_creature, ::transport::Catalogue& transport) {
+        void ReadDataBase(std::istream& i_stream,int number_of_requests_create, ::transport::Catalogue& transport) {
             std::string line = "";
             std::unordered_map<std::string, std::pair<bool, std::vector<std::string>>> name_of_bus;
 
 
-            for (int number = 0; number <= number_of_requests_creature; ++number) {
+            for (int number = 0; number <= number_of_requests_create; ++number) {
                 std::array<std::string, 100> names;
                 std::array<int, 100> length;
                 int stop_nomber = 0;
 
-                std::getline(std::cin, line);
+                std::getline(i_stream, line);
                 auto str = static_cast<std::string_view>(line);
                 int64_t pos = 0;
                 const int64_t pos_end = str.npos;
@@ -106,6 +106,18 @@ namespace transport {
             }
             for (auto [bus, stops] : name_of_bus) {
                 transport.SetBus(bus, stops.first, move(stops.second));
+            }
+        }
+
+        void RequestToTheDatabase(std::istream& i_stream, int number_of_requests, ::transport::Catalogue& transport) {
+            for (int number = 0; number <= number_of_requests; ++number) {
+                auto [type, query] = ::transport::user_interaction::ReadRequests();
+                if (type == "Bus") {
+                    transport.GetBusInfo(query);
+                }
+                if (type == "Stop") {
+                    transport.GetStopInfo(query);
+                }
             }
         }
     }
