@@ -14,9 +14,9 @@
 
 using namespace transport;
 void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& coordinate, std::array<std::string, 100>&& names, std::array<int, 100>&& length, int stops_quantity) {
-		Stop* stop_name;
+	::transport::detail::Stop* stop_name;
 		if (!name_of_stop_.count(stop)) {
-			stops_.push_back(Stop(std::move(stop), std::move(coordinate)));
+			stops_.push_back(::transport::detail::Stop(std::move(stop), std::move(coordinate)));
 			name_of_stop_[stops_.back().name_of_stop] = &stops_.back();
 			stop_name = &stops_.back();
 		}
@@ -32,7 +32,7 @@ void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& c
 				}
 				else {
 
-					stops_.push_back(Stop(std::move(names[i])));
+					stops_.push_back(::transport::detail::Stop(std::move(names[i])));
 					name_of_stop_[stops_.back().name_of_stop] = &stops_.back();
 					lengths[{stop_name, & stops_.back()}] = length[i];
 				}
@@ -40,7 +40,7 @@ void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& c
 		}
 	}
 	void Catalogue::SetBus(std::string bus_name, bool circular_route, std::vector<std::string>&& stops) {
-		Bus bus;
+		::transport::detail::Bus bus;
 		bus.bus_nomber = bus_name;
 		bus.is_circular = circular_route;
 
@@ -69,8 +69,8 @@ void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& c
 			int quantity_stops = bus.stops.size();
 			double map_distance = 0;
 			int real_distance = 0;
-			auto stop_adr = Stop();
-			Stop* last_step = &stop_adr;
+			auto stop_adr = ::transport::detail::Stop();
+			::transport::detail::Stop* last_step = &stop_adr;
 			for (auto stop : bus.stops) {
 				if (last_step->name_of_stop.empty()) {
 					last_step = stop;
@@ -85,8 +85,8 @@ void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& c
 				map_distance += ComputeDistance(last_step->coordinat, stop->coordinat);
 				last_step = stop;
 			}
-			auto stop_adr_reverse = Stop();
-			Stop* last_step_reverse = &stop_adr_reverse;
+			auto stop_adr_reverse = ::transport::detail::Stop();
+			::transport::detail::Stop* last_step_reverse = &stop_adr_reverse;
 			if (!bus.is_circular) {
 				for (int iter = bus.stops.size() - 1; iter >= 0; --iter) {
 					if (last_step_reverse->name_of_stop.empty()) {
@@ -105,7 +105,7 @@ void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& c
 
 				quantity_stops = 2 * quantity_stops - 1;
 			}
-			std::unordered_set<Stop*> uniq_stops;
+			std::unordered_set<::transport::detail::Stop*> uniq_stops;
 			for (auto stop : bus.stops) {
 				uniq_stops.insert(stop);
 			}
