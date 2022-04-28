@@ -45,7 +45,7 @@ namespace transport {
 
 	class Catalogue {
 	public:
-		void SetStop(std::string&& stop, ::transport::detail::Coordinates&& coordinate, std::array<std::string, 100>&& names, std::array<int, 100>&& length, int stops_quantity);
+		void SetStop(std::string&& stop, ::transport::detail::Coordinates&& coordinate, std::unordered_map<std::string_view, int> real_distances);
 		void SetBus(std::string bus_name, bool circular_route, std::vector<std::string>&& stops);
 		void GetStop();
 		void GetBus();

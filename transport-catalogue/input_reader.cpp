@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <utility>
 #include <string_view>
 #include <charconv>
@@ -47,10 +48,12 @@ namespace transport {
             return { is_circular,stops };
         }
 
-        void ReadStop(int64_t& pos, int& stop_nomber, std::string_view& str, std::string_view name, ::transport::Catalogue& transport) {
-            std::array<std::string, 100> names;
-            std::array<int, 100> length;
+        void ReadStop(int64_t& pos,const std::string_view str, std::string_view name, ::transport::Catalogue& transport) {
+            //std::array<std::string, 100> names;
+            //std::array<int, 100> length;
+            std::unordered_map<std::string_view, int> real_distances;
             const int64_t pos_end = str.npos;
+            //int stop_nomber = 0;
 
             int64_t space = str.find(',', pos);
             auto lat = str.substr(pos, space - pos);
@@ -66,11 +69,12 @@ namespace transport {
                 pos = space + 2;
                 while (true) {
                     int64_t space = str.find(' ', pos);
-                    length[stop_nomber] = std::stoi((static_cast<std::string>(str.substr(pos, space - pos))));
+                    int length = std::stoi((static_cast<std::string>(str.substr(pos, space - pos))));
                     pos = space + 4;
                     space = str.find(',', pos);
-                    names[stop_nomber] = (space == pos_end ? str.substr(pos) : str.substr(pos, space - pos));
-                    ++stop_nomber;
+                    auto name = (space == pos_end ? str.substr(pos) : str.substr(pos, space - pos));
+
+                    real_distances[name] = length;
                     if (space == pos_end) {
                         break;
                     }
@@ -83,7 +87,7 @@ namespace transport {
             k.lat = detail::StringToDouble(static_cast<std::string>(lat));
             k.lng = detail::StringToDouble(static_cast<std::string>(lng));
 
-            transport.SetStop(static_cast<std::string>(name), std::move(k), std::move(names), std::move(length), stop_nomber);
+            transport.SetStop(static_cast<std::string>(name), std::move(k), real_distances);
         }
 
         void ReadCoordinates() {
@@ -107,9 +111,7 @@ namespace transport {
         void ReadDataBase(std::istream& i_stream,int number_of_requests_create, ::transport::Catalogue& transport) {
             std::string line = "";
             std::unordered_map<std::string, std::pair<bool, std::vector<std::string>>> name_of_bus;
-
-            int stop_nomber = 0;
-
+         
             for (int number = 0; number <= number_of_requests_create; ++number) {
                 int64_t pos = 0;
                 int64_t space = 0;
@@ -120,7 +122,7 @@ namespace transport {
                 auto [mode, name] = detail::ReadRequestBeginning(str,pos);
 
                 if (mode == "Stop") {
-                    detail::ReadStop(pos,stop_nomber,str,name,transport);
+                    detail::ReadStop(pos,str,name,transport);
                 }
                 else if (mode == "Bus") {
                     name_of_bus[static_cast<std::string>(name)] = detail::ReadBuses(str, pos);

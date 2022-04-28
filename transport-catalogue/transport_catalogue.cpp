@@ -13,7 +13,7 @@
 #include "transport_catalogue.h"
 
 using namespace transport;
-void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& coordinate, std::array<std::string, 100>&& names, std::array<int, 100>&& length, int stops_quantity) {
+void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& coordinate, std::unordered_map<std::string_view, int> real_distances) {
 	::transport::detail::Stop* stop_name;
 		if (!name_of_stop_.count(stop)) {
 			stops_.push_back(::transport::detail::Stop(std::move(stop), std::move(coordinate)));
@@ -25,16 +25,15 @@ void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& c
 			stop_name->coordinat.lat = coordinate.lat;
 			stop_name->coordinat.lng = coordinate.lng;
 		}
-		if (stops_quantity != 0) {
-			for (int i = 0; i < stops_quantity; ++i) {
-				if (name_of_stop_.count(names[i])) {
-					lengths[{stop_name, name_of_stop_.at(names[i])}] = length[i];
+		if (!real_distances.empty()) {
+			for (const auto [name,length] : real_distances) {
+				if (name_of_stop_.count(name)) {
+					lengths[{stop_name, name_of_stop_.at(name)}] = length;
 				}
 				else {
-
-					stops_.push_back(::transport::detail::Stop(std::move(names[i])));
+					stops_.push_back(::transport::detail::Stop(std::move(static_cast<std::string>(name))));
 					name_of_stop_[stops_.back().name_of_stop] = &stops_.back();
-					lengths[{stop_name, & stops_.back()}] = length[i];
+					lengths[{stop_name, & stops_.back()}] = length;
 				}
 			}
 		}
