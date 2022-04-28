@@ -59,12 +59,12 @@ void Catalogue::SetStop(std::string&& stop, const::transport::detail::Coordinate
 		}
 	}
 
-	void Catalogue::GetStop() {
-
+	detail::Stop Catalogue::GetStop(const std::string_view name) {
+		return *name_of_stop_.at(name);
 	}
 
-	void Catalogue::GetBus() {
-
+	detail::Bus Catalogue::GetBus(const std::string_view nomber) {
+		return *name_of_bus_.at(nomber);
 	}
 
 	void Catalogue::GetBusInfo(std::string& bus_nomber) {

@@ -48,8 +48,8 @@ namespace transport {
 		void SetDistancesToStop(const std::string_view name, const std::unordered_map<std::string_view, int> real_distances);
 		void SetStop(std::string&& stop, const ::transport::detail::Coordinates&& coordinate);
 		void SetBus(const std::string& bus_name, const bool circular_route, const std::vector<std::string>& stops);
-		void GetStop();
-		void GetBus();
+		detail::Stop GetStop(const std::string_view name);
+		detail::Bus GetBus(const std::string_view nomber);
 		void GetBusInfo(std::string& bus_nomber);
 		void GetStopInfo(std::string& stop_name);
 
