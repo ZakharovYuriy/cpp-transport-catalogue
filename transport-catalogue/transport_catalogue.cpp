@@ -38,7 +38,7 @@ void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& c
 			}
 		}
 	}
-	void Catalogue::SetBus(std::string bus_name, bool circular_route, std::vector<std::string>&& stops) {
+	void Catalogue::SetBus(std::string bus_name, bool circular_route, std::vector<std::string> stops) {
 		::transport::detail::Bus bus;
 		bus.bus_nomber = bus_name;
 		bus.is_circular = circular_route;
@@ -51,7 +51,6 @@ void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& c
 			busses_.back().stops.push_back(stop_name);
 			stop_and_busses[stop_name->name_of_stop].insert(busses_.back().bus_nomber);
 		}
-
 	}
 
 	void Catalogue::GetStop() {

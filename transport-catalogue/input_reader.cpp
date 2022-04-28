@@ -33,7 +33,6 @@ namespace transport {
             if (*znak == '>') {
                 is_circular = true;
             }
-
             --pos;
             while (true) {
                 int64_t space = str.find(*znak, pos);
@@ -49,11 +48,8 @@ namespace transport {
         }
 
         void ReadStop(int64_t& pos,const std::string_view str, std::string_view name, ::transport::Catalogue& transport) {
-            //std::array<std::string, 100> names;
-            //std::array<int, 100> length;
             std::unordered_map<std::string_view, int> real_distances;
             const int64_t pos_end = str.npos;
-            //int stop_nomber = 0;
 
             int64_t space = str.find(',', pos);
             auto lat = str.substr(pos, space - pos);
@@ -88,10 +84,6 @@ namespace transport {
             k.lng = detail::StringToDouble(static_cast<std::string>(lng));
 
             transport.SetStop(static_cast<std::string>(name), std::move(k), real_distances);
-        }
-
-        void ReadCoordinates() {
-
         }
 
         std::pair<std::string_view, std::string_view> ReadRequestBeginning(std::string_view str, int64_t& pos){
