@@ -8,9 +8,10 @@
 #include <algorithm>
 #include <deque>
 #include <array>
-#include "stat_reader.h"
-#include "geo.h"
+
 #include "transport_catalogue.h"
+#include "geo.h"
+
 
 using namespace transport;
 
@@ -67,58 +68,71 @@ void Catalogue::SetStop(std::string&& stop, const::transport::detail::Coordinate
 		return *name_of_bus_.at(nomber);
 	}
 
-	void Catalogue::GetBusInfo(std::string& bus_nomber) {
+	std::pair<int, double>Catalogue::ComputeRealAndMapDistance(const ::transport::detail::Bus& bus) {
+		double map_distance = 0;
+		int real_distance = 0;
+		auto stop_adr = ::transport::detail::Stop();
+		::transport::detail::Stop* last_step = &stop_adr;
+
+		for (auto stop : bus.stops) {
+			if (last_step->name_of_stop.empty()) {
+				last_step = stop;
+				continue;
+			}
+
+			if (lengths.count({ last_step,stop })) {
+				real_distance += lengths.at({ last_step,stop });
+			}
+			else {
+				real_distance += lengths.at({ stop,last_step });
+			}
+			map_distance += ComputeDistance(last_step->coordinat, stop->coordinat);
+			last_step = stop;
+		}
+
+		auto stop_adr_reverse = ::transport::detail::Stop();
+		::transport::detail::Stop* last_step_reverse = &stop_adr_reverse;
+
+		if (!bus.is_circular) {
+			for (int iter = bus.stops.size() - 1; iter >= 0; --iter) {
+				if (last_step_reverse->name_of_stop.empty()) {
+					last_step_reverse = bus.stops[iter];
+					continue;
+				}
+
+				if (lengths.count({ last_step_reverse,bus.stops[iter] })) {
+					real_distance += lengths.at({ last_step_reverse,bus.stops[iter] });
+				}
+				else {
+					real_distance += lengths.at({ bus.stops[iter],last_step_reverse });
+				}
+
+				map_distance += ComputeDistance(last_step_reverse->coordinat, bus.stops[iter]->coordinat);
+				last_step_reverse = bus.stops[iter];
+			}
+		}
+		return{ real_distance ,map_distance };
+	}
+
+	detail::BusInfo Catalogue::GetBusInfo(std::string& bus_nomber) {
 		if (name_of_bus_.count(bus_nomber)) {
 			auto bus = *name_of_bus_[bus_nomber];
 			int quantity_stops = bus.stops.size();
-			double map_distance = 0;
-			int real_distance = 0;
-			auto stop_adr = ::transport::detail::Stop();
-			::transport::detail::Stop* last_step = &stop_adr;
-			for (auto stop : bus.stops) {
-				if (last_step->name_of_stop.empty()) {
-					last_step = stop;
-					continue;
-				}
-				if (lengths.count({ last_step,stop })) {
-					real_distance += lengths.at({ last_step,stop });
-				}
-				else {
-					real_distance += lengths.at({ stop,last_step });
-				}
-				map_distance += ComputeDistance(last_step->coordinat, stop->coordinat);
-				last_step = stop;
-			}
-			auto stop_adr_reverse = ::transport::detail::Stop();
-			::transport::detail::Stop* last_step_reverse = &stop_adr_reverse;
+			
 			if (!bus.is_circular) {
-				for (int iter = bus.stops.size() - 1; iter >= 0; --iter) {
-					if (last_step_reverse->name_of_stop.empty()) {
-						last_step_reverse = bus.stops[iter];
-						continue;
-					}
-					if (lengths.count({ last_step_reverse,bus.stops[iter] })) {
-						real_distance += lengths.at({ last_step_reverse,bus.stops[iter] });
-					}
-					else {
-						real_distance += lengths.at({ bus.stops[iter],last_step_reverse });
-					}
-					map_distance += ComputeDistance(last_step_reverse->coordinat, bus.stops[iter]->coordinat);
-					last_step_reverse = bus.stops[iter];
-				}
-
 				quantity_stops = 2 * quantity_stops - 1;
 			}
+
 			std::unordered_set<::transport::detail::Stop*> uniq_stops;
 			for (auto stop : bus.stops) {
 				uniq_stops.insert(stop);
 			}
 
-
-			::transport::user_interaction::ResultOutputBus(bus.bus_nomber, quantity_stops, uniq_stops.size(), real_distance, real_distance / map_distance);
+			auto [real_distance, map_distance] = ComputeRealAndMapDistance(bus);
+			return detail::BusInfo(bus, quantity_stops, uniq_stops.size(), real_distance, real_distance / map_distance);
 		}
 		else {
-			::transport::user_interaction::BadResultBus(bus_nomber);
+			return detail::BusInfo(bus_nomber);
 		}
 	}
 
@@ -127,13 +141,13 @@ void Catalogue::SetStop(std::string&& stop, const::transport::detail::Coordinate
 			if (stop_and_busses.count(stop_name)) {
 				std::vector<std::string_view>vect_to_sort(stop_and_busses[stop_name].begin(), stop_and_busses[stop_name].end());
 				std::sort(vect_to_sort.begin(), vect_to_sort.end());
-				::transport::user_interaction::ResultOutputStop(stop_name, vect_to_sort);
+				//::transport::user_interaction::ResultOutputStop(stop_name, vect_to_sort);
 			}
 			else {
-				::transport::user_interaction::BadResultNoBusses(stop_name);
+				//::transport::user_interaction::BadResultNoBusses(stop_name);
 			}
 		}
 		else {
-			::transport::user_interaction::BadResultStop(stop_name);
+			//::transport::user_interaction::BadResultStop(stop_name);
 		}
 	}

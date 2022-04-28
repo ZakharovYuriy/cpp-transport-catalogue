@@ -12,5 +12,5 @@ int main() {
 	cin >> number_of_requests;
 	::transport::user_interaction::ReadDataBase(cin,number_of_requests, transport);
 	cin >> number_of_requests;
-	::transport::user_interaction::RequestToTheDatabase(cin, number_of_requests, transport);
+	::transport::user_interaction::RequestToTheDatabase(cout, number_of_requests, transport);
 }

@@ -9,25 +9,42 @@
 #include <algorithm>
 #include <deque>
 #include <array>
-#include "stat_reader.h"
+//#include "stat_reader.h"
 #include "geo.h"
 
 namespace transport {
 	namespace detail {
 		struct Stop {
-			Stop() {}
+			Stop() = default;
 			Stop(const std::string&& name, const ::transport::detail::Coordinates& coord) :name_of_stop{ name }, coordinat{ coord }{
 			}
 			Stop(const std::string&& name) :name_of_stop{ name } {
 			}
-			std::string name_of_stop;
+			std::string name_of_stop="";
 			::transport::detail::Coordinates coordinat;
 		};
 
 		struct Bus {
-			std::string bus_nomber;
-			bool is_circular;
+			std::string bus_nomber="";
+			bool is_circular=false;
 			std::vector <Stop*> stops;
+		};
+
+		struct BusInfo {
+			BusInfo() = delete;
+			BusInfo(std::string& nomber) :bus_nomber(nomber) {
+			}
+			BusInfo(const Bus& bus, const int number_st, const int unic_st, const int real_dist, const double dist) :
+				 number_of_stops(number_st), unic_stops(unic_st), real_distance(real_dist), distance(dist) {
+				not_empty = true;
+				bus_nomber = bus.bus_nomber;
+			}
+			std::string bus_nomber;
+			int number_of_stops=0;
+			int unic_stops=0;
+			int real_distance=0; 
+			double distance=0;
+			bool not_empty = false;
 		};
 
 		struct StopHasher {
@@ -50,10 +67,11 @@ namespace transport {
 		void SetBus(const std::string& bus_name, const bool circular_route, const std::vector<std::string>& stops);
 		detail::Stop GetStop(const std::string_view name);
 		detail::Bus GetBus(const std::string_view nomber);
-		void GetBusInfo(std::string& bus_nomber);
+		detail::BusInfo GetBusInfo(std::string& bus_nomber);
 		void GetStopInfo(std::string& stop_name);
 
 	private:		
+		std::pair<int, double>ComputeRealAndMapDistance(const ::transport::detail::Bus& bus);
 		std::deque<::transport::detail::Stop>stops_;
 		std::deque<::transport::detail::Bus>busses_;
 		std::unordered_map<std::string_view, ::transport::detail::Stop*> name_of_stop_;

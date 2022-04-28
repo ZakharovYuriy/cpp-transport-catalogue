@@ -13,6 +13,7 @@
 #include "transport_catalogue.h"
 #include "geo.h"
 #include "input_reader.h"
+#include "stat_reader.h"
 
 namespace transport {
     namespace detail {
@@ -126,11 +127,11 @@ namespace transport {
             }
         }
 
-        void RequestToTheDatabase(std::istream& i_stream, int number_of_requests, ::transport::Catalogue& transport) {
+        void RequestToTheDatabase(std::ostream& o_stream, int number_of_requests, ::transport::Catalogue& transport) {
             for (int number = 0; number <= number_of_requests; ++number) {
                 auto [type, query] = ::transport::user_interaction::ReadRequests();
                 if (type == "Bus") {
-                    transport.GetBusInfo(query);
+                    ::transport::user_interaction::ResultOutputBus(transport.GetBusInfo(query));
                 }
                 if (type == "Stop") {
                     transport.GetStopInfo(query);

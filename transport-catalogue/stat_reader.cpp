@@ -6,9 +6,9 @@
 #include <utility>
 #include <string_view>
 #include <charconv>
-#include "transport_catalogue.h"
-#include "stat_reader.h"
 
+//#include "transport_catalogue.h"
+#include "stat_reader.h"
 #include "geo.h"
 
 namespace transport {
@@ -27,10 +27,17 @@ namespace transport {
             auto bus_nomber = str.substr(pos);
             return { static_cast<std::string>(type), static_cast<std::string>(bus_nomber) };
         }
-        void ResultOutputBus(std::string_view name_bus, int number_of_stops, int unic_stops, int real_distance, double distance) {
-            std::cout << "Bus " << name_bus << ": " << number_of_stops << " stops on route, " << unic_stops
-                << " unique stops, " << std::setprecision(6) << real_distance << " route length, " << distance << " curvature" << std::endl;
+        //std::string_view name_bus, int number_of_stops, int unic_stops, int real_distance, double distance
+        void ResultOutputBus(const ::transport::detail::BusInfo& bus) {
+            if (bus.not_empty) {
+                std::cout << "Bus " << bus.bus_nomber << ": " << bus.number_of_stops << " stops on route, " << bus.unic_stops
+                    << " unique stops, " << std::setprecision(6) << bus.real_distance << " route length, " << bus.distance << " curvature" << std::endl;
+            }
+            else {
+                ::transport::user_interaction::BadResultBus(bus.bus_nomber);
+            }
         }
+
         void ResultOutputStop(std::string_view name_bus, std::vector<std::string_view> buses) {
             std::cout << "Stop " << name_bus << ": buses ";
             for (auto bus : buses) {
