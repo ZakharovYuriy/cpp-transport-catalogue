@@ -23,8 +23,28 @@ namespace transport {
             return x;
         }
 
-        void ReadBuses() {
+        std::pair<bool, std::vector<std::string>> ReadBuses(std::string_view str, int64_t& pos, int64_t& space) {
+            std::vector<std::string> stops;
+            const int64_t pos_end = str.npos;
 
+            auto znak = std::find_if(str.begin() + pos, str.end(), [](auto word) { return word == '>' || word == '-'; });
+            bool is_circular = false;
+            if (*znak == '>') {
+                is_circular = true;
+            }
+
+            --pos;
+            while (true) {
+                int64_t space = str.find(*znak, pos);
+                stops.push_back(static_cast<std::string>(space == pos_end ? str.substr(pos + 1) : str.substr(pos + 1, space - 2 - pos)));
+                if (space == pos_end) {
+                    break;
+                }
+                else {
+                    pos = space + 1;
+                }
+            }
+            return { is_circular,stops };
         }
 
         void ReadStop(int64_t& space, int64_t& pos, int& stop_nomber, std::string_view& str, std::string_view name, ::transport::Catalogue& transport) {
@@ -103,27 +123,7 @@ namespace transport {
                     detail::ReadStop(space,pos,stop_nomber,str,name,transport);
                 }
                 else if (mode == "Bus") {
-                    std::vector<std::string> stops;
-                    const int64_t pos_end = str.npos;
-
-                    auto znak = std::find_if(str.begin() + pos, str.end(), [](auto word) { return word == '>' || word == '-'; });
-                    bool is_circular = false;
-                    if (*znak == '>') {
-                        is_circular = true;
-                    }
-
-                    --pos;
-                    while (true) {
-                        int64_t space = str.find(*znak, pos);
-                        stops.push_back(static_cast<std::string>(space == pos_end ? str.substr(pos + 1) : str.substr(pos + 1, space - 2 - pos)));
-                        if (space == pos_end) {
-                            break;
-                        }
-                        else {
-                            pos = space + 1;
-                        }
-                    }
-                    name_of_bus[static_cast<std::string>(name)] = { is_circular,stops };
+                    name_of_bus[static_cast<std::string>(name)] = detail::ReadBuses(str, pos, space);
                 }
             }
             for (auto [bus, stops] : name_of_bus) {
