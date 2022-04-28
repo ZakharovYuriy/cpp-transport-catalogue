@@ -23,10 +23,10 @@ namespace transport {
             return x;
         }
 
-        std::pair<bool, std::vector<std::string>> ReadBuses(std::string_view str, int64_t& pos, int64_t& space) {
+        std::pair<bool, std::vector<std::string>> ReadBuses(std::string_view str, int64_t& pos) {
             std::vector<std::string> stops;
             const int64_t pos_end = str.npos;
-
+            int64_t space = str.find(',', pos);
             auto znak = std::find_if(str.begin() + pos, str.end(), [](auto word) { return word == '>' || word == '-'; });
             bool is_circular = false;
             if (*znak == '>') {
@@ -47,12 +47,12 @@ namespace transport {
             return { is_circular,stops };
         }
 
-        void ReadStop(int64_t& space, int64_t& pos, int& stop_nomber, std::string_view& str, std::string_view name, ::transport::Catalogue& transport) {
+        void ReadStop(int64_t& pos, int& stop_nomber, std::string_view& str, std::string_view name, ::transport::Catalogue& transport) {
             std::array<std::string, 100> names;
             std::array<int, 100> length;
             const int64_t pos_end = str.npos;
 
-            space = str.find(',', pos);
+            int64_t space = str.find(',', pos);
             auto lat = str.substr(pos, space - pos);
             pos = space + 2;
 
@@ -90,9 +90,9 @@ namespace transport {
 
         }
 
-        std::pair<std::string_view, std::string_view> ReadRequestBeginning(std::string_view str, int64_t& pos, int64_t& space){
+        std::pair<std::string_view, std::string_view> ReadRequestBeginning(std::string_view str, int64_t& pos){
             pos = 0;
-            space = str.find(' ', pos);
+            int64_t space = str.find(' ', pos);
             auto mode = str.substr(pos, space - pos);
             pos = space + 1;
 
@@ -117,13 +117,13 @@ namespace transport {
                 std::getline(i_stream, line);
                 auto str = static_cast<std::string_view>(line);
 
-                auto [mode, name] = detail::ReadRequestBeginning(str,pos,space);
+                auto [mode, name] = detail::ReadRequestBeginning(str,pos);
 
                 if (mode == "Stop") {
-                    detail::ReadStop(space,pos,stop_nomber,str,name,transport);
+                    detail::ReadStop(pos,stop_nomber,str,name,transport);
                 }
                 else if (mode == "Bus") {
-                    name_of_bus[static_cast<std::string>(name)] = detail::ReadBuses(str, pos, space);
+                    name_of_bus[static_cast<std::string>(name)] = detail::ReadBuses(str, pos);
                 }
             }
             for (auto [bus, stops] : name_of_bus) {
