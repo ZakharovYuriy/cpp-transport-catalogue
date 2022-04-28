@@ -45,14 +45,15 @@ namespace transport {
 
 	class Catalogue {
 	public:
-		void SetStop(std::string&& stop, ::transport::detail::Coordinates&& coordinate, std::unordered_map<std::string_view, int> real_distances);
-		void SetBus(std::string bus_name, bool circular_route, std::vector<std::string> stops);
+		void SetDistancesToStop(const std::string_view name, const std::unordered_map<std::string_view, int> real_distances);
+		void SetStop(std::string&& stop, const ::transport::detail::Coordinates&& coordinate);
+		void SetBus(const std::string& bus_name, const bool circular_route, const std::vector<std::string>& stops);
 		void GetStop();
 		void GetBus();
 		void GetBusInfo(std::string& bus_nomber);
 		void GetStopInfo(std::string& stop_name);
 
-	private:
+	private:		
 		std::deque<::transport::detail::Stop>stops_;
 		std::deque<::transport::detail::Bus>busses_;
 		std::unordered_map<std::string_view, ::transport::detail::Stop*> name_of_stop_;

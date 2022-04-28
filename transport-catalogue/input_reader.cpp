@@ -47,7 +47,7 @@ namespace transport {
             return { is_circular,stops };
         }
 
-        void ReadStop(int64_t& pos,const std::string_view str, std::string_view name, ::transport::Catalogue& transport) {
+        void ReadStopParameters(int64_t& pos,const std::string_view str, std::string_view name, ::transport::Catalogue& transport) {
             std::unordered_map<std::string_view, int> real_distances;
             const int64_t pos_end = str.npos;
 
@@ -83,7 +83,8 @@ namespace transport {
             k.lat = detail::StringToDouble(static_cast<std::string>(lat));
             k.lng = detail::StringToDouble(static_cast<std::string>(lng));
 
-            transport.SetStop(static_cast<std::string>(name), std::move(k), real_distances);
+            transport.SetStop(static_cast<std::string>(name), std::move(k));
+            transport.SetDistancesToStop(name, real_distances);
         }
 
         std::pair<std::string_view, std::string_view> ReadRequestBeginning(std::string_view str, int64_t& pos){
@@ -114,7 +115,7 @@ namespace transport {
                 auto [mode, name] = detail::ReadRequestBeginning(str,pos);
 
                 if (mode == "Stop") {
-                    detail::ReadStop(pos,str,name,transport);
+                    detail::ReadStopParameters(pos,str,name,transport);
                 }
                 else if (mode == "Bus") {
                     name_of_bus[static_cast<std::string>(name)] = detail::ReadBuses(str, pos);

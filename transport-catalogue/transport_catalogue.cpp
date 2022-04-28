@@ -13,10 +13,27 @@
 #include "transport_catalogue.h"
 
 using namespace transport;
-void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& coordinate, std::unordered_map<std::string_view, int> real_distances) {
+
+void Catalogue::SetDistancesToStop(const std::string_view name, const std::unordered_map<std::string_view, int> real_distances) {
+	::transport::detail::Stop* stop_name= name_of_stop_.at(name);
+	if (!real_distances.empty()) {
+		for (const auto [name, length] : real_distances) {
+			if (name_of_stop_.count(name)) {
+				lengths[{stop_name, name_of_stop_.at(name)}] = length;
+			}
+			else {
+				stops_.push_back(::transport::detail::Stop(std::move(static_cast<std::string>(name))));
+				name_of_stop_[stops_.back().name_of_stop] = &stops_.back();
+				lengths[{stop_name, & stops_.back()}] = length;
+			}
+		}
+	}
+}
+
+void Catalogue::SetStop(std::string&& stop, const::transport::detail::Coordinates&& coordinate) {
 	::transport::detail::Stop* stop_name;
 		if (!name_of_stop_.count(stop)) {
-			stops_.push_back(::transport::detail::Stop(std::move(stop), std::move(coordinate)));
+			stops_.push_back(::transport::detail::Stop(std::move(stop), coordinate));
 			name_of_stop_[stops_.back().name_of_stop] = &stops_.back();
 			stop_name = &stops_.back();
 		}
@@ -24,21 +41,10 @@ void Catalogue::SetStop(std::string&& stop, ::transport::detail::Coordinates&& c
 			stop_name = name_of_stop_.at(stop);
 			stop_name->coordinat.lat = coordinate.lat;
 			stop_name->coordinat.lng = coordinate.lng;
-		}
-		if (!real_distances.empty()) {
-			for (const auto [name,length] : real_distances) {
-				if (name_of_stop_.count(name)) {
-					lengths[{stop_name, name_of_stop_.at(name)}] = length;
-				}
-				else {
-					stops_.push_back(::transport::detail::Stop(std::move(static_cast<std::string>(name))));
-					name_of_stop_[stops_.back().name_of_stop] = &stops_.back();
-					lengths[{stop_name, & stops_.back()}] = length;
-				}
-			}
-		}
+		}		
 	}
-	void Catalogue::SetBus(std::string bus_name, bool circular_route, std::vector<std::string> stops) {
+
+	void Catalogue::SetBus(const std::string& bus_name, const bool circular_route, const std::vector<std::string>& stops) {
 		::transport::detail::Bus bus;
 		bus.bus_nomber = bus_name;
 		bus.is_circular = circular_route;
