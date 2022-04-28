@@ -23,15 +23,60 @@ namespace transport {
             return x;
         }
     }
+
+    void ReadBuses() {
+    
+    }
+
+    void ReadStop(int64_t& space, int64_t& pos, int& stop_nomber,const int64_t pos_end, std::string_view& str, std::string_view& name,::transport::Catalogue& transport) {
+        std::array<std::string, 100> names;
+        std::array<int, 100> length;
+
+        space = str.find(',', pos);
+        auto lat = str.substr(pos, space - pos);
+        pos = space + 2;
+
+        auto lng = lat;
+        space = str.find(',', pos);
+        if (space == pos_end) {
+            lng = str.substr(pos);
+        }
+        else {
+            lng = str.substr(pos, space - pos);
+            pos = space + 2;
+            while (true) {
+                int64_t space = str.find(' ', pos);
+                length[stop_nomber] = std::stoi((static_cast<std::string>(str.substr(pos, space - pos))));
+                pos = space + 4;
+                space = str.find(',', pos);
+                names[stop_nomber] = (space == pos_end ? str.substr(pos) : str.substr(pos, space - pos));
+                ++stop_nomber;
+                if (space == pos_end) {
+                    break;
+                }
+                else {
+                    pos = space + 2;
+                }
+            }
+        }
+        ::transport::detail::Coordinates k;
+        k.lat = detail::StringToDouble(static_cast<std::string>(lat));
+        k.lng = detail::StringToDouble(static_cast<std::string>(lng));
+
+        transport.SetStop(static_cast<std::string>(name), std::move(k), std::move(names), std::move(length), stop_nomber);
+    }
+
+    void ReadCoordinates() {
+
+    }
+
     namespace user_interaction {
         void ReadDataBase(std::istream& i_stream,int number_of_requests_create, ::transport::Catalogue& transport) {
             std::string line = "";
             std::unordered_map<std::string, std::pair<bool, std::vector<std::string>>> name_of_bus;
 
-
             for (int number = 0; number <= number_of_requests_create; ++number) {
-                std::array<std::string, 100> names;
-                std::array<int, 100> length;
+                //std::vector<int>                 
                 int stop_nomber = 0;
 
                 std::getline(i_stream, line);
@@ -48,38 +93,7 @@ namespace transport {
                 pos = space + 2;
 
                 if (mode == "Stop") {
-                    space = str.find(',', pos);
-                    auto lat = str.substr(pos, space - pos);
-                    pos = space + 2;
-
-                    auto lng = lat;
-                    space = str.find(',', pos);
-                    if (space == pos_end) {
-                        lng = str.substr(pos);
-                    }
-                    else {
-                        lng = str.substr(pos, space - pos);
-                        pos = space + 2;
-                        while (true) {
-                            int64_t space = str.find(' ', pos);
-                            length[stop_nomber] = std::stoi((static_cast<std::string>(str.substr(pos, space - pos))));
-                            pos = space + 4;
-                            space = str.find(',', pos);
-                            names[stop_nomber] = (space == pos_end ? str.substr(pos) : str.substr(pos, space - pos));
-                            ++stop_nomber;
-                            if (space == pos_end) {
-                                break;
-                            }
-                            else {
-                                pos = space + 2;
-                            }
-                        }
-                    }
-                    ::transport::detail::Coordinates k;
-                    k.lat = detail::StringToDouble(static_cast<std::string>(lat));
-                    k.lng = detail::StringToDouble(static_cast<std::string>(lng));
-
-                    transport.SetStop(static_cast<std::string>(name), std::move(k), std::move(names), std::move(length), stop_nomber);
+                    ReadStop(space,pos,stop_nomber,pos_end,str,name,transport);
                 }
                 else if (mode == "Bus") {
                     std::vector<std::string> stops;
