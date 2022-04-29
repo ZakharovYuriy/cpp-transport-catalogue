@@ -1,15 +1,15 @@
 #pragma once
-#include <vector>
+
+#include <algorithm>
+#include <deque>
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <set>
 #include <string>
 #include <string_view>
-#include <algorithm>
-#include <deque>
-#include <array>
-//#include "stat_reader.h"
+#include <vector>
+
 #include "geo.h"
 
 namespace transport {
@@ -61,7 +61,6 @@ namespace transport {
 			std::vector<std::string_view> buses;
 			bool exist = false;
 		};
-
 
 		struct StopHasher {
 			size_t operator() (const std::pair<Stop*, Stop*> stop_place) const {

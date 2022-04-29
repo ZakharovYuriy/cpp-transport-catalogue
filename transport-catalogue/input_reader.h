@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
-#include "transport_catalogue.h"
+
 #include "geo.h"
+#include "transport_catalogue.h"
 
 namespace transport {
 	namespace detail {

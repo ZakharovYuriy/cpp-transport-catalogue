@@ -1,17 +1,15 @@
-#include <vector>
+#include <algorithm>
+#include <deque>
 #include <map>
-#include <unordered_map>
-#include <unordered_set>
 #include <set>
 #include <string>
 #include <string_view>
-#include <algorithm>
-#include <deque>
-#include <array>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
-#include "transport_catalogue.h"
 #include "geo.h"
-
+#include "transport_catalogue.h"
 
 using namespace transport;
 

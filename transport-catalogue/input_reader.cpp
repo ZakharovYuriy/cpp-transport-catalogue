@@ -1,19 +1,18 @@
+#include <charconv>
 #include <iostream>
 #include <iomanip>
-#include <string>
-#include <vector>
 #include <map>
+#include <sstream>
+#include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
-#include <string_view>
-#include <charconv>
-#include <array>
-#include <sstream>
+#include <vector>
 
-#include "transport_catalogue.h"
 #include "geo.h"
 #include "input_reader.h"
 #include "stat_reader.h"
+#include "transport_catalogue.h"
 
 namespace transport {
     namespace detail {
