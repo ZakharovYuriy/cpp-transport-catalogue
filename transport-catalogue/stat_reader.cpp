@@ -38,12 +38,22 @@ namespace transport {
             }
         }
 
-        void ResultOutputStop(std::string_view name_bus, std::vector<std::string_view> buses) {
-            std::cout << "Stop " << name_bus << ": buses ";
-            for (auto bus : buses) {
-                std::cout << bus << " ";
+        void ResultOutputStop(const detail::StopInfo& stop) {
+            if (stop.exist) {
+                if (!stop.buses.empty()) {
+                    std::cout << "Stop " << stop.stop_name << ": buses ";
+                    for (auto bus : stop.buses) {
+                        std::cout << bus << " ";
+                    }
+                    std::cout << std::endl;
+                }
+                else {
+                    BadResultNoBusses(stop.stop_name);
+                }
             }
-            std::cout << std::endl;
+            else {
+                BadResultStop(stop.stop_name);
+            }
         }
 
         void BadResultBus(std::string_view name_bus) {

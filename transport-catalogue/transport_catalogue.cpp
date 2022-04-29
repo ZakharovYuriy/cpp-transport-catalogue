@@ -136,18 +136,18 @@ void Catalogue::SetStop(std::string&& stop, const::transport::detail::Coordinate
 		}
 	}
 
-	void Catalogue::GetStopInfo(std::string& stop_name) {
+	detail::StopInfo Catalogue::GetStopInfo(std::string& stop_name) {
 		if (name_of_stop_.count(stop_name)) {
 			if (stop_and_busses.count(stop_name)) {
 				std::vector<std::string_view>vect_to_sort(stop_and_busses[stop_name].begin(), stop_and_busses[stop_name].end());
 				std::sort(vect_to_sort.begin(), vect_to_sort.end());
-				//::transport::user_interaction::ResultOutputStop(stop_name, vect_to_sort);
+				return detail::StopInfo(name_of_stop_.at(stop_name), vect_to_sort);
 			}
 			else {
-				//::transport::user_interaction::BadResultNoBusses(stop_name);
+				return detail::StopInfo(name_of_stop_.at(stop_name));
 			}
 		}
 		else {
-			//::transport::user_interaction::BadResultStop(stop_name);
+			return detail::StopInfo(stop_name);
 		}
 	}

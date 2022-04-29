@@ -47,6 +47,22 @@ namespace transport {
 			bool not_empty = false;
 		};
 
+		struct StopInfo {
+			StopInfo() = delete;
+			StopInfo(std::string name):stop_name(name){
+			}
+			StopInfo(const Stop* stop) :stop_name(stop->name_of_stop), exist(true){
+			}
+			StopInfo(const Stop* stop, std::vector<std::string_view> buses_input) :buses(buses_input){
+				exist = true;
+				stop_name = stop->name_of_stop;
+			}
+			std::string stop_name;
+			std::vector<std::string_view> buses;
+			bool exist = false;
+		};
+
+
 		struct StopHasher {
 			size_t operator() (const std::pair<Stop*, Stop*> stop_place) const {
 				size_t first_stop = d_hasher_(stop_place.first);
@@ -68,7 +84,7 @@ namespace transport {
 		detail::Stop GetStop(const std::string_view name);
 		detail::Bus GetBus(const std::string_view nomber);
 		detail::BusInfo GetBusInfo(std::string& bus_nomber);
-		void GetStopInfo(std::string& stop_name);
+		detail::StopInfo GetStopInfo(std::string& stop_name);
 
 	private:		
 		std::pair<int, double>ComputeRealAndMapDistance(const ::transport::detail::Bus& bus);

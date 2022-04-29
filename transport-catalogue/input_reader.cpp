@@ -134,7 +134,7 @@ namespace transport {
                     ::transport::user_interaction::ResultOutputBus(transport.GetBusInfo(query));
                 }
                 if (type == "Stop") {
-                    transport.GetStopInfo(query);
+                    ::transport::user_interaction::ResultOutputStop(transport.GetStopInfo(query));
                 }
             }
         }
