@@ -21,7 +21,7 @@ namespace transport {
 			Stop(const std::string&& name) :name_of_stop{ name } {
 			}
 			std::string name_of_stop="";
-			::transport::detail::Coordinates coordinat;
+			::transport::detail::Coordinates coordinat = {0,0};
 		};
 
 		struct Bus {
@@ -32,7 +32,7 @@ namespace transport {
 
 		struct BusInfo {
 			BusInfo() = delete;
-			BusInfo(std::string& nomber) :bus_nomber(nomber) {
+			BusInfo(const std::string& nomber) :bus_nomber(nomber) {
 			}
 			BusInfo(const Bus& bus, const int number_st, const int unic_st, const int real_dist, const double dist) :
 				 number_of_stops(number_st), unic_stops(unic_st), real_distance(real_dist), distance(dist) {
@@ -78,17 +78,17 @@ namespace transport {
 	class Catalogue {
 	public:
 		void SetDistancesToStop(const std::string_view name, const std::unordered_map<std::string_view, int> real_distances);
-		void SetStop(std::string&& stop, const ::transport::detail::Coordinates&& coordinate);
+		void SetStop(const std::string& stop, const ::transport::detail::Coordinates&& coordinate);
 		void SetBus(const std::string& bus_name, const bool circular_route, const std::vector<std::string>& stops);
 		detail::Stop GetStop(const std::string_view name);
 		detail::Bus GetBus(const std::string_view nomber);
-		detail::BusInfo GetBusInfo(std::string& bus_nomber);
-		detail::StopInfo GetStopInfo(std::string& stop_name);
+		detail::BusInfo GetBusInfo(const std::string& bus_nomber);
+		detail::StopInfo GetStopInfo(const std::string& stop_name);
 
 	private:		
 		std::pair<int, double>ComputeRealAndMapDistance(const ::transport::detail::Bus& bus);
-		std::deque<::transport::detail::Stop>stops_;
-		std::deque<::transport::detail::Bus>busses_;
+		std::deque<::transport::detail::Stop> stops_;
+		std::deque<::transport::detail::Bus> busses_;
 		std::unordered_map<std::string_view, ::transport::detail::Stop*> name_of_stop_;
 		std::unordered_map<std::string_view, ::transport::detail::Bus*> name_of_bus_;
 		std::unordered_map<std::string_view, std::unordered_set<std::string_view>> stop_and_busses;

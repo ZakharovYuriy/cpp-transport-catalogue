@@ -47,7 +47,7 @@ namespace transport {
             return { is_circular,stops };
         }
 
-        void ReadStopParameters(int64_t& pos,const std::string_view str, std::string_view name, ::transport::Catalogue& transport) {
+        void ReadStopParameters(int64_t& pos,const std::string_view str, const std::string_view name, ::transport::Catalogue& transport) {
             std::unordered_map<std::string_view, int> real_distances;
             const int64_t pos_end = str.npos;
 
@@ -83,11 +83,11 @@ namespace transport {
             k.lat = detail::StringToDouble(static_cast<std::string>(lat));
             k.lng = detail::StringToDouble(static_cast<std::string>(lng));
 
-            transport.SetStop(static_cast<std::string>(name), std::move(k));
+            transport.SetStop(std::move(static_cast<std::string>(name)), std::move(k));
             transport.SetDistancesToStop(name, real_distances);
         }
 
-        std::pair<std::string_view, std::string_view> ReadRequestBeginning(std::string_view str, int64_t& pos){
+        std::pair<std::string_view, std::string_view> ReadRequestBeginning(const std::string_view str, int64_t& pos){
             pos = 0;
             int64_t space = str.find(' ', pos);
             auto mode = str.substr(pos, space - pos);
@@ -101,11 +101,12 @@ namespace transport {
     }
 
     namespace user_interaction {
-        void ReadDataBase(std::istream& i_stream,int number_of_requests_create, ::transport::Catalogue& transport) {
+        void ReadDataBase(std::istream& i_stream, ::transport::Catalogue& transport) {
             std::string line = "";
             std::unordered_map<std::string, std::pair<bool, std::vector<std::string>>> name_of_bus;
-         
-            for (int number = 0; number <= number_of_requests_create; ++number) {
+            std::getline(i_stream, line);
+            int number_of_requests_create = std::stoi(line);
+            for (int number = 0; number < number_of_requests_create; ++number) {
                 int64_t pos = 0;
                 int64_t space = 0;
 
@@ -126,14 +127,17 @@ namespace transport {
             }
         }
 
-        void RequestToTheDatabase(std::ostream& o_stream, int number_of_requests, ::transport::Catalogue& transport) {
-            for (int number = 0; number <= number_of_requests; ++number) {
-                auto [type, query] = ::transport::user_interaction::ReadRequests();
+        void RequestToTheDatabase(std::istream& i_stream, std::ostream& o_stream, ::transport::Catalogue& transport) {
+            std::string line = "";
+            std::getline(i_stream, line);
+            int number_of_requests = std::stoi(line);
+            for (int number = 0; number < number_of_requests; ++number) {
+                auto [type, query] = ::transport::user_interaction::ReadRequests(i_stream);
                 if (type == "Bus") {
-                    ::transport::user_interaction::ResultOutputBus(transport.GetBusInfo(query));
+                    ::transport::user_interaction::ResultOutputBus(o_stream, transport.GetBusInfo(query));
                 }
                 if (type == "Stop") {
-                    ::transport::user_interaction::ResultOutputStop(transport.GetStopInfo(query));
+                    ::transport::user_interaction::ResultOutputStop(o_stream, transport.GetStopInfo(query));
                 }
             }
         }

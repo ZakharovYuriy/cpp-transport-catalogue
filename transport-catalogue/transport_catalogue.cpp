@@ -29,13 +29,13 @@ void Catalogue::SetDistancesToStop(const std::string_view name, const std::unord
 	}
 }
 
-void Catalogue::SetStop(std::string&& stop, const::transport::detail::Coordinates&& coordinate) {
+void Catalogue::SetStop(const std::string& stop, const ::transport::detail::Coordinates&& coordinate) {
 	::transport::detail::Stop* stop_name;
 		if (!name_of_stop_.count(stop)) {
 			stops_.push_back(::transport::detail::Stop(std::move(stop), coordinate));
 			name_of_stop_[stops_.back().name_of_stop] = &stops_.back();
 			stop_name = &stops_.back();
-		}
+		 }
 		else {
 			stop_name = name_of_stop_.at(stop);
 			stop_name->coordinat.lat = coordinate.lat;
@@ -112,7 +112,7 @@ void Catalogue::SetStop(std::string&& stop, const::transport::detail::Coordinate
 		return{ real_distance ,map_distance };
 	}
 
-	detail::BusInfo Catalogue::GetBusInfo(std::string& bus_nomber) {
+	detail::BusInfo Catalogue::GetBusInfo(const std::string& bus_nomber) {
 		if (name_of_bus_.count(bus_nomber)) {
 			auto bus = *name_of_bus_[bus_nomber];
 			int quantity_stops = bus.stops.size();
@@ -134,7 +134,7 @@ void Catalogue::SetStop(std::string&& stop, const::transport::detail::Coordinate
 		}
 	}
 
-	detail::StopInfo Catalogue::GetStopInfo(std::string& stop_name) {
+	detail::StopInfo Catalogue::GetStopInfo(const std::string& stop_name) {
 		if (name_of_stop_.count(stop_name)) {
 			if (stop_and_busses.count(stop_name)) {
 				std::vector<std::string_view>vect_to_sort(stop_and_busses[stop_name].begin(), stop_and_busses[stop_name].end());

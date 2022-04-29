@@ -13,10 +13,10 @@
 
 namespace transport {
     namespace user_interaction {
-        std::pair< std::string, std::string> ReadRequests() {
+        std::pair< std::string, std::string> ReadRequests(std::istream& i_stream) {
             std::vector <std::string> result_query;
             std::string line = "";
-            std::getline(std::cin, line);
+            std::getline(i_stream, line);
             auto str = static_cast<std::string_view>(line);
             int64_t pos = 0;
 
@@ -28,44 +28,44 @@ namespace transport {
             return { static_cast<std::string>(type), static_cast<std::string>(bus_nomber) };
         }
 
-        void ResultOutputBus(const ::transport::detail::BusInfo& bus) {
+        void ResultOutputBus(std::ostream& o_stream, const ::transport::detail::BusInfo& bus) {
             if (bus.not_empty) {
-                std::cout << "Bus " << bus.bus_nomber << ": " << bus.number_of_stops << " stops on route, " << bus.unic_stops
+                o_stream << "Bus " << bus.bus_nomber << ": " << bus.number_of_stops << " stops on route, " << bus.unic_stops
                     << " unique stops, " << std::setprecision(6) << bus.real_distance << " route length, " << bus.distance << " curvature" << std::endl;
             }
             else {
-                ::transport::user_interaction::BadResultBus(bus.bus_nomber);
+                ::transport::user_interaction::BadResultBus(o_stream, bus.bus_nomber);
             }
         }
 
-        void ResultOutputStop(const detail::StopInfo& stop) {
+        void ResultOutputStop(std::ostream& o_stream, const detail::StopInfo& stop) {
             if (stop.exist) {
                 if (!stop.buses.empty()) {
-                    std::cout << "Stop " << stop.stop_name << ": buses ";
+                    o_stream << "Stop " << stop.stop_name << ": buses ";
                     for (auto bus : stop.buses) {
-                        std::cout << bus << " ";
+                        o_stream << bus << " ";
                     }
-                    std::cout << std::endl;
+                    o_stream << std::endl;
                 }
                 else {
-                    BadResultNoBusses(stop.stop_name);
+                    BadResultNoBusses(o_stream, stop.stop_name);
                 }
             }
             else {
-                BadResultStop(stop.stop_name);
+                BadResultStop(o_stream, stop.stop_name);
             }
         }
 
-        void BadResultBus(std::string_view name_bus) {
-            std::cout << "Bus " << name_bus << ": " << "not found" << std::endl;
+        void BadResultBus(std::ostream& o_stream, const std::string_view name_bus) {
+            o_stream << "Bus " << name_bus << ": " << "not found" << std::endl;
         }
 
-        void BadResultStop(std::string_view name_stop) {
-            std::cout << "Stop " << name_stop << ": " << "not found" << std::endl;
+        void BadResultStop(std::ostream& o_stream, const std::string_view name_stop) {
+            o_stream << "Stop " << name_stop << ": " << "not found" << std::endl;
         }
 
-        void BadResultNoBusses(std::string_view name_stop) {
-            std::cout << "Stop " << name_stop << ": " << "no buses" << std::endl;
+        void BadResultNoBusses(std::ostream& o_stream, const std::string_view name_stop) {
+            o_stream << "Stop " << name_stop << ": " << "no buses" << std::endl;
         }
     }
 }

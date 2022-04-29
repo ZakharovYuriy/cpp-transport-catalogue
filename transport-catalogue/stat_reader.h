@@ -8,11 +8,11 @@
 
 namespace transport {
 	namespace user_interaction {
-		std::pair< std::string, std::string> ReadRequests();
-		void ResultOutputBus(const ::transport::detail::BusInfo& bus);
-		void ResultOutputStop(const detail::StopInfo& stop);
-		void BadResultBus(std::string_view name_bus);
-		void BadResultStop(std::string_view name_bus);
-		void BadResultNoBusses(std::string_view name_bus);
+		std::pair< std::string, std::string> ReadRequests(std::istream& i_stream);
+		void ResultOutputBus(std::ostream& o_stream, const ::transport::detail::BusInfo& bus);
+		void ResultOutputStop(std::ostream& o_stream, const detail::StopInfo& stop);
+		void BadResultBus(std::ostream& o_stream, const std::string_view name_bus);
+		void BadResultStop(std::ostream& o_stream, const std::string_view name_bus);
+		void BadResultNoBusses(std::ostream& o_stream, const std::string_view name_bus);
 	}
 }
