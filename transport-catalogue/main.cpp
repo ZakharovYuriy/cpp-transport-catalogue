@@ -1,29 +1,56 @@
+//#include "log_duration.h"
+
 #include <iostream>
+#include <chrono>
 #include <string>
 #include <fstream>
 
-#include "input_reader.h"
-#include "stat_reader.h"
+#include "map_renderer.h"
+#include "json_reader.h"
 #include "transport_catalogue.h"
-
 
 using namespace std;
 
-void TestFileStream() {
-	int number_of_requests = 0;
-	::transport::Catalogue transport;
-	std::ifstream in("C:\\Games\\test.txt"); // окрываем файл для чтения
-	std::ofstream out;          // поток для записи
-	out.open("C:\\Games\\TestOutput2.txt"); // окрываем файл для записи
+void TestSVG() {
+    ::transport::Catalogue transport;
+    std::ifstream in("C:\\Games\\TestInput2.txt"); // окрываем файл для чтения
+    std::ofstream out;          // поток для записи
+    out.open("C:\\Games\\TestOutput2.svg"); // окрываем файл для записи
+   
+    ::transport::json::Reader reader;
+    //{LOG_DURATION("readDoc"s);
+        reader.ReadDocumentInCatalogue(in, transport);
+    //}
 
-	::transport::user_interaction::ReadDataBase(in, transport);
-	::transport::user_interaction::RequestToTheDatabase(in, out, transport);
+    //{LOG_DURATION("Drow"s);
+    ::svg::Document doc;
+    ::transport::svg::MapRender map_render(reader.GetRenderSettings());
+    map_render.DrowMap(transport, doc);
+    doc.Render(out);
+    doc.Render(cout);
+    // }
+}
+void TestJSON() {
+    ::transport::Catalogue transport;
+    std::ifstream in("C:\\Games\\TestInput2.txt"); // окрываем файл для чтения
+    std::ofstream out;          // поток для записи
+    out.open("C:\\Games\\TestOutput3.txt"); // окрываем файл для записи
+
+    ::transport::json::Reader reader;
+
+    reader.ReadDocumentInCatalogue(in, transport);
+    reader.ResponseToRequests(out, transport);
+
+}
+void JSONoutput() {
+    ::transport::Catalogue transport;
+    ::transport::json::Reader reader;
+    reader.ReadDocumentInCatalogue(cin, transport);
+    reader.ResponseToRequests(cout, transport);
 }
 
 int main() {
-	int number_of_requests = 0;
-	::transport::Catalogue transport;
-	::transport::user_interaction::ReadDataBase(cin, transport);
-	::transport::user_interaction::RequestToTheDatabase(cin, cout, transport);
-	TestFileStream();
+    TestSVG();
+    TestJSON();
+    JSONoutput();
 }
