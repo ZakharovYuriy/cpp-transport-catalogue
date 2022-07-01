@@ -29,7 +29,7 @@ void Catalogue::SetDistancesToStop(const std::string_view current_name, const st
 	}
 }
 
-void Catalogue::SetStop(const std::string& stop_n, const ::geo::Coordinates&& coordinate) {
+void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& coordinate) {
 	::transport::detail::Stop* stop_name;
 		if (!name_of_stop_.count(stop_n)) {
 			stops_.push_back(::transport::detail::Stop(std::move(stop_n), coordinate));
@@ -44,18 +44,18 @@ void Catalogue::SetStop(const std::string& stop_n, const ::geo::Coordinates&& co
 	}
 
 //задает маршруты только при наличии всех остановок
-	void Catalogue::SetBus(const std::string& bus_name, const bool circular_route, const std::vector<std::string>& stops) {
+	void Catalogue::AddBus(const std::string& bus_name, const bool circular_route, const std::vector<std::string>& stops) {
 		::transport::detail::Bus bus;
-		bus.bus_nomber = bus_name;
+		bus.bus_number = bus_name;
 		bus.is_circular = circular_route;
 
 		busses_.push_back(bus);
-		name_of_bus_[busses_.back().bus_nomber] = &busses_.back();
+		name_of_bus_[busses_.back().bus_number] = &busses_.back();
 
 		for (auto& stop : stops) {
 			auto stop_name = name_of_stop_.find(stop)->second;
 			busses_.back().stops.push_back(stop_name);
-			stop_and_busses[stop_name->name_of_stop].insert(busses_.back().bus_nomber);
+			stop_and_busses[stop_name->name_of_stop].insert(busses_.back().bus_number);
 		}
 	}
 
@@ -63,13 +63,12 @@ void Catalogue::SetStop(const std::string& stop_n, const ::geo::Coordinates&& co
 		return *name_of_stop_.at(name);
 	}
 
-	detail::Bus Catalogue::GetBus(const std::string_view nomber) {
-		return *name_of_bus_.at(nomber);
+	detail::Bus Catalogue::GetBus(const std::string_view number) {
+		return *name_of_bus_.at(number);
 	}
 
-	std::pair<int, double>Catalogue::ComputeRealAndMapDistance(const ::transport::detail::Bus& bus) const {
-		double map_distance = 0;
-		int real_distance = 0;
+	Catalogue::Distance Catalogue::ComputeRealAndMapDistance(const ::transport::detail::Bus& bus) const {
+		Distance distance;
 		auto stop_adr = ::transport::detail::Stop();
 		::transport::detail::Stop* last_step = &stop_adr;
 
@@ -80,12 +79,12 @@ void Catalogue::SetStop(const std::string& stop_n, const ::geo::Coordinates&& co
 			}
 
 			if (lengths.count({ last_step,stop })) {
-				real_distance += lengths.at({ last_step,stop });
+				distance.real_distance += lengths.at({ last_step,stop });
 			}
 			else {
-				real_distance += lengths.at({ stop,last_step });
+				distance.real_distance += lengths.at({ stop,last_step });
 			}
-			map_distance += ComputeDistance(last_step->coordinat, stop->coordinat);
+			distance.map_distance += ComputeDistance(last_step->coordinat, stop->coordinat);
 			last_step = stop;
 		}
 
@@ -100,22 +99,22 @@ void Catalogue::SetStop(const std::string& stop_n, const ::geo::Coordinates&& co
 				}
 
 				if (lengths.count({ last_step_reverse,bus.stops[iter] })) {
-					real_distance += lengths.at({ last_step_reverse,bus.stops[iter] });
+					distance.real_distance += lengths.at({ last_step_reverse,bus.stops[iter] });
 				}
 				else {
-					real_distance += lengths.at({ bus.stops[iter],last_step_reverse });
+					distance.real_distance += lengths.at({ bus.stops[iter],last_step_reverse });
 				}
 
-				map_distance += ComputeDistance(last_step_reverse->coordinat, bus.stops[iter]->coordinat);
+				distance.map_distance += ComputeDistance(last_step_reverse->coordinat, bus.stops[iter]->coordinat);
 				last_step_reverse = bus.stops[iter];
 			}
 		}
-		return{ real_distance ,map_distance };
+		return distance;
 	}
 
-	detail::BusInfo Catalogue::GetBusInfo(const std::string& bus_nomber){
-		if (name_of_bus_.count(bus_nomber)) {
-			auto bus = *name_of_bus_[bus_nomber];
+	detail::BusInfo Catalogue::GetBusInfo(const std::string& bus_number){
+		if (name_of_bus_.count(bus_number)) {
+			auto bus = *name_of_bus_[bus_number];
 			int quantity_stops = bus.stops.size();
 			
 			if (!bus.is_circular) {
@@ -127,11 +126,11 @@ void Catalogue::SetStop(const std::string& stop_n, const ::geo::Coordinates&& co
 				uniq_stops.insert(stop);
 			}
 
-			auto [real_distance, map_distance] = ComputeRealAndMapDistance(bus);
-			return detail::BusInfo(bus, quantity_stops, uniq_stops.size(), real_distance, real_distance / map_distance);
+			Catalogue::Distance dist = ComputeRealAndMapDistance(bus);
+			return detail::BusInfo(bus, quantity_stops, uniq_stops.size(), dist.real_distance, static_cast<double>(dist.real_distance) / static_cast<double>(dist.map_distance));
 		}
 		else {
-			return detail::BusInfo(bus_nomber);
+			return detail::BusInfo(bus_number);
 		}
 	}
 
@@ -157,7 +156,7 @@ void Catalogue::SetStop(const std::string& stop_n, const ::geo::Coordinates&& co
 			deq_to_sort.push_front(&bus);
 		}
 		::std::sort(deq_to_sort.begin(), deq_to_sort.end(), [](::transport::detail::Bus* a, ::transport::detail::Bus* b) {
-			return a->bus_nomber < b->bus_nomber;
+			return a->bus_number < b->bus_number;
 			});
 		return deq_to_sort;
 	}

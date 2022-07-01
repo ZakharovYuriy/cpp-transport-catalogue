@@ -93,8 +93,8 @@ namespace transport {
             ::transport::svg::detail::Settings global_settings_;
             std::deque<::transport::detail::Bus*> list_of_busses_;
 
-            void DrowPath(const SphereProjector& project, long unsigned int& bus_nomber_in_array, ::transport::detail::Bus* bus, ::svg::ObjectContainer& target);
-            void DrowRouteNames(const SphereProjector& project, long unsigned int& bus_nomber_in_array, ::transport::detail::Bus* bus, ::svg::ObjectContainer& target);
+            void DrowPath(const SphereProjector& project, long unsigned int& bus_number_in_array, ::transport::detail::Bus* bus, ::svg::ObjectContainer& target);
+            void DrowRouteNames(const SphereProjector& project, long unsigned int& bus_number_in_array, ::transport::detail::Bus* bus, ::svg::ObjectContainer& target);
             void DrowCircles(::svg::ObjectContainer& target, ::std::map<::std::string, ::svg::Point>& name_stops);
             void DrowStopNames(::svg::ObjectContainer& target, ::std::map<::std::string, ::svg::Point>& name_stops);
         };

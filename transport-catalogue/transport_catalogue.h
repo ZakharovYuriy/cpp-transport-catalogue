@@ -18,18 +18,23 @@ namespace transport {
 	class Catalogue {
 	public:
 		void SetDistancesToStop(const std::string_view name, const std::unordered_map<std::string_view, int> real_distances);
-		void SetStop(const std::string& stop_name, const ::geo::Coordinates&& coordinate);
-		void SetBus(const std::string& bus_name, const bool circular_route, const std::vector<std::string>& stops);
+		void AddStop(const std::string& stop_name, const ::geo::Coordinates&& coordinate);
+		void AddBus(const std::string& bus_name, const bool circular_route, const std::vector<std::string>& stops);
 		detail::Stop GetStop(const std::string_view name);
-		detail::Bus GetBus(const std::string_view nomber);
-		detail::BusInfo GetBusInfo(const std::string& bus_nomber);
+		detail::Bus GetBus(const std::string_view number);
+		detail::BusInfo GetBusInfo(const std::string& bus_number);
 		detail::StopInfo GetStopInfo(const std::string& stop_name);
 		std::deque<::transport::detail::Bus*> GetOrderedListOfBuses();
 		std::deque<::transport::detail::Stop>& GetListOfStops();
 		std::deque<::geo::Coordinates> GetStopsCoordinatesFromListOfBuses();
 
+		struct Distance {
+			double map_distance = 0;
+			int real_distance = 0;
+		};
+
 	private:		
-		std::pair<int, double>ComputeRealAndMapDistance(const ::transport::detail::Bus& bus) const;
+		Distance ComputeRealAndMapDistance(const ::transport::detail::Bus& bus) const;
 		std::deque<::transport::detail::Stop> stops_;
 		std::deque<::transport::detail::Bus> busses_;
 		std::unordered_map<std::string_view, ::transport::detail::Stop*> name_of_stop_;

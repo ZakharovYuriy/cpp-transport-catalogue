@@ -7,65 +7,18 @@ using namespace std;
 
 namespace json {
 
-    bool operator== (const json::Node& n1, const json::Node& n2) {
-        if (n1.IsString() && n2.IsString()) {
-            if (n1.AsString() == n2.AsString())
-            {
-                return true;
-            }
-        }
-        else if (n1.IsBool() && n2.IsBool()) {
-            if (n1.AsBool() == n2.AsBool())
-            {
-                return true;
-            }
-        }
-        else if (n1.IsArray() && n2.IsArray()) {
-            for (long unsigned int i = 0; i < n1.AsArray().size(); ++i) {
-                if (!(n1.AsArray().at(i) == n2.AsArray().at(i)))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-        else if (n1.IsMap() && n2.IsMap()) {
-            for (const auto& element : n1.AsMap()) {
-                if (n2.AsMap().at(element.first) != element.second) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        else if (n1.IsInt() && n2.IsInt()) {
-            if (n1.AsInt() == n2.AsInt())
-            {
-                return true;
-            }
-        }
-        else if (n1.IsPureDouble() && n2.IsPureDouble()) {
-            if (n1.AsDouble() == n2.AsDouble())
-            {
-                return true;
-            }
-        }
-        else if (n1.IsNull() && n2.IsNull()) {
-            if (n1.AsNull() == n2.AsNull())
-            {
-                return true;
-            }
-        }
-        return false;
+    bool operator==(const json::Node& left_node, const json::Node& right_node) {
+        return left_node.GetValue()== right_node.GetValue();
     }
-    bool operator!= (const json::Node& n1, const json::Node& n2) {
-        return !(n1 == n2);
+    bool operator!= (const json::Node& left_node, const json::Node& right_node) {
+        return !(left_node == right_node);
     }
 
-    bool operator== (const json::Document& n1, const json::Document& n2) {
-        return n1.GetRoot() == n2.GetRoot();
+    bool operator== (const json::Document& left_node, const json::Document& right_node) {
+        return left_node.GetRoot() == right_node.GetRoot();
     }
-    bool operator!= (const json::Document& n1, const json::Document& n2) {
-        return !(n1==n2);
+    bool operator!= (const json::Document& left_node, const json::Document& right_node) {
+        return !(left_node==right_node);
     }
 
     namespace {
@@ -182,7 +135,7 @@ namespace json {
                 if (!std::isdigit(input.peek())) {
                     is_int = false;
                     string null_w = "null"s;
-                    string buff="";
+                    string buff = "";
                     for (const auto& w : null_w) {
                         if (input.peek() == w) {
                             is_null = true;
@@ -290,7 +243,7 @@ namespace json {
             string result;
             bool symv = false;
             bool end_of_string = false;
-            for (char w= input.get(); !input.eof(); w = input.get()) {
+            for (char w = input.get(); !input.eof(); w = input.get()) {
                 if (symv) {                   
                     if (w == 'n') {
                         result += "\n";
@@ -374,107 +327,87 @@ namespace json {
 
     }  // namespace
 
-    Node::Node(Value val)
-        : number_(move(val)) {
-    }
-    Node::Node(std::string val)
-        : number_(move(val)) {
-    }
-    Node::Node(Array val)
-        : number_(move(val)) {
-    }
-    Node::Node(Dict val)
-        : number_(move(val)) {
-    }
-    Node::Node(int val)
-        : number_(move(val)), number_double_(move(static_cast<double>(val))){
-    }
-    Node::Node(double val)
-        : number_(move(val)) {
-    }
-    Node::Node(bool val)
-        : number_(move(val)) {
-    }
-    Node::Node(std::nullptr_t val)
-        : number_(move(val)) {
-    }
 
-    Value Node::GetValue()const {
-        return number_;
+    const Node::Value& Node::GetValue()const {
+        return *this;
     }
 
     bool Node::IsString()const {
-        return std::holds_alternative<std::string>(number_);
+        return std::holds_alternative<std::string>(*this);
     }
     bool Node::IsBool()const {
-        return std::holds_alternative<bool>(number_);
+        return std::holds_alternative<bool>(*this);
     }
     bool Node::IsArray()const {
-        return std::holds_alternative<Array>(number_);
+        return std::holds_alternative<Array>(*this);
     }
     bool Node::IsMap()const {
-        return std::holds_alternative<Dict>(number_);
+        return std::holds_alternative<Dict>(*this);
     }
     bool Node::IsInt()const {
-        return std::holds_alternative<int>(number_);
-    }
-    bool Node::IsDouble()const {
-        return std::holds_alternative<double>(number_)|| std::holds_alternative<int>(number_);
+        return std::holds_alternative<int>(*this);
     }
     bool Node:: IsPureDouble()const{
-        return std::holds_alternative<double>(number_);
+        return std::holds_alternative<double>(*this);
     }
+    bool Node::IsDouble()const {
+        return IsInt() || IsPureDouble();;
+    }  
     bool Node::IsNull()const {
-        return std::holds_alternative<std::nullptr_t>(number_);
+        return std::holds_alternative<std::nullptr_t>(*this);
     }
 
     const Array& Node::AsArray() const {
-        if (!std::holds_alternative<Array>(number_)) {
-            throw logic_error("incorrect tipe");
-        }
-        return *(std::get_if<Array>(&number_));
-    }
-    const Dict& Node::AsMap() const {
-        if (!std::holds_alternative<Dict>(number_)) {
-            throw logic_error("incorrect tipe");
-        }
-        return *(std::get_if<Dict>(&number_));
-    }
-    const int& Node::AsInt() const {
-        if (!std::holds_alternative<int>(number_)) {
-            throw logic_error("incorrect tipe");
-        }
-        return *(std::get_if<int>(&number_));
-    }
-    const bool& Node::AsBool() const {
-        if (!std::holds_alternative<bool>(number_)) {
-            throw logic_error("incorrect tipe");
-        }
-        return *(std::get_if<bool>(&number_));
-    }
-    const double& Node::AsDouble() const {
-        if (!(std::holds_alternative<double>(number_) || std::holds_alternative<int>(number_))) {
-            throw logic_error("incorrect tipe");
+        using namespace std::literals;
+        if (!IsArray()) {
+            throw std::logic_error("Not an array"s);
         }
 
-        if (std::get_if<double>(&number_)) {
-            return *(std::get_if<double>(&number_));
+        return std::get<Array>(*this);
+    }
+    const Dict& Node::AsMap() const {
+        using namespace std::literals;
+        if (!IsMap()) {
+            throw std::logic_error("Not a dict"s);
         }
-        else {
-            return number_double_;
+
+        return std::get<Dict>(*this);
+    }
+    int Node::AsInt() const {
+        using namespace std::literals;
+        if (!IsInt()) {
+            throw std::logic_error("Not an int"s);
         }
+        return std::get<int>(*this);
+    }
+    bool Node::AsBool() const {
+        using namespace std::literals;
+        if (!IsBool()) {
+            throw std::logic_error("Not a bool"s);
+        }
+
+        return std::get<bool>(*this);
+    }
+    double Node::AsDouble() const {
+        using namespace std::literals;
+        if (!IsDouble()) {
+            throw std::logic_error("Not a double"s);
+        }
+        return IsPureDouble() ? std::get<double>(*this) : AsInt();
     }
     const std::nullptr_t& Node::AsNull() const {
-        if (!std::holds_alternative< std::nullptr_t>(number_)) {
-            throw logic_error("incorrect tipe");
+        if (!IsNull()) {
+            throw logic_error("Not a nullptr_t");
         }
-        return *(std::get_if<std::nullptr_t>(&number_));
+        return std::get<std::nullptr_t>(*this);
     }
     const string& Node::AsString() const {
-        if (!std::holds_alternative<std::string>(number_)) {
-            throw logic_error("incorrect tipe");
+        using namespace std::literals;
+        if (!IsString()) {
+            throw std::logic_error("Not a string"s);
         }
-        return *(std::get_if<std::string>(&number_));
+
+        return std::get<std::string>(*this);
     }
 
     Document::Document(Node root)

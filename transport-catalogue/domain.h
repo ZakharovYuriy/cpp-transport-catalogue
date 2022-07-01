@@ -30,21 +30,21 @@ namespace transport {
 		};
 
 		struct Bus {
-			std::string bus_nomber = "";
+			std::string bus_number = "";
 			bool is_circular = false;
 			std::vector <Stop*> stops;
 		};
 
 		struct BusInfo {
 			BusInfo() = delete;
-			BusInfo(const std::string& nomber) :bus_nomber(nomber) {
+			BusInfo(const std::string& number) :bus_number(number) {
 			}
 			BusInfo(const Bus& bus, const int number_st, const int unic_st, const int real_dist, const double dist) :
 				number_of_stops(number_st), unic_stops(unic_st), real_distance(real_dist), distance(dist) {
 				not_empty = true;
-				bus_nomber = bus.bus_nomber;
+				bus_number = bus.bus_number;
 			}
-			std::string bus_nomber;
+			std::string bus_number;
 			int number_of_stops = 0;
 			int unic_stops = 0;
 			int real_distance = 0;

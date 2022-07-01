@@ -21,6 +21,13 @@ namespace transport {
 			std::vector<::transport::json::detail::Request> requests_;
 			::transport::svg::detail::Settings render_settings_;
 
+			void StopRequest(const::json::Dict&, Catalogue&);
+			void BusRequest(const ::json::Dict&, Catalogue&);
+
+			::json::Node ReadStopInfo(const json::detail::Request&, Catalogue&);
+			::json::Node ReadBusInfo(const json::detail::Request&, Catalogue&);
+			::json::Node ReadMapInfo(const json::detail::Request&, Catalogue&);
+
 			void ReadBaseRequests(::json::Node& stops_and_buses, Catalogue& catalogue);
 			void SetStatRequests(::json::Node& requests);
 			::json::Document GetOutputDoc(Catalogue& catalogue);

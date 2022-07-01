@@ -10,7 +10,7 @@ namespace json {
     class Node;
     using Dict = std::map<std::string, Node>;
     using Array = std::vector<Node>;
-    using Value = std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string>;
+    //using Value = std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string>;
 
     // Эта ошибка должна выбрасываться при ошибках парсинга JSON
     class ParsingError : public std::runtime_error {
@@ -18,17 +18,10 @@ namespace json {
         using runtime_error::runtime_error;
     };
 
-    class Node {
+    class Node  final : private std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string> {
     public:
-        Node()=default;
-        explicit   Node(Value val);
-        explicit   Node(std::nullptr_t val);
-        explicit   Node(int val);
-        explicit   Node(Array val);
-        explicit   Node(Dict val);
-        explicit   Node(bool val);
-        explicit   Node(double val);
-        explicit   Node(std::string val);
+        using variant::variant;
+        using Value = variant;
 
         bool IsString()const;
         bool IsBool()const;
@@ -39,19 +32,15 @@ namespace json {
         bool IsPureDouble()const;
         bool IsNull()const;
 
-        Value GetValue()const;
+        const Value& GetValue() const;
 
         const Array& AsArray() const;
         const Dict& AsMap() const;
-        const bool& AsBool() const;
-        const int& AsInt() const;
-        const double& AsDouble() const;
+        bool AsBool() const;
+        int AsInt() const;
+        double AsDouble() const;
         const std::nullptr_t& AsNull() const;
         const std::string& AsString() const;
-
-    private:
-        Value number_;
-        double number_double_=0.0;
     };
 
     class Document {
@@ -68,8 +57,8 @@ namespace json {
 
     void Print(const Document& doc, std::ostream& output);
 
-    bool operator== (const json::Node& n1, const json::Node& n2);
-    bool operator!= (const json::Node& n1, const json::Node& n2);
-    bool operator== (const json::Document& n1, const json::Document& n2);
-    bool operator!= (const json::Document& n1, const json::Document& n2);
+    bool operator== (const json::Node& left_node, const json::Node& right_node);
+    bool operator!= (const json::Node& left_node, const json::Node& right_node);
+    bool operator== (const json::Document& left_node, const json::Document& right_node);
+    bool operator!= (const json::Document& left_node, const json::Document& right_node);
 }

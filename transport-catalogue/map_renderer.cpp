@@ -85,29 +85,29 @@ namespace transport {
             list_of_busses_ = catalogue.GetOrderedListOfBuses();
             const auto& stop_coordinates = catalogue.GetStopsCoordinatesFromListOfBuses();
             SphereProjector project(stop_coordinates.begin(), stop_coordinates.end(), global_settings_.width, global_settings_.height, global_settings_.padding);
-            long unsigned int bus_nomber_in_array = 0;
+            long unsigned int bus_number_in_array = 0;
             for (const auto& bus : list_of_busses_) {
                 if (bus->stops.empty()) {
                     continue;
                 }
 
-                if (bus_nomber_in_array >= global_settings_.color_palette.size()) {
-                    bus_nomber_in_array = 0;
+                if (bus_number_in_array >= global_settings_.color_palette.size()) {
+                    bus_number_in_array = 0;
                 }
-                DrowPath(project, bus_nomber_in_array, bus, target);
-                ++bus_nomber_in_array;
+                DrowPath(project, bus_number_in_array, bus, target);
+                ++bus_number_in_array;
             }
-            bus_nomber_in_array = 0;
+            bus_number_in_array = 0;
             ::std::map<::std::string, ::svg::Point > name_stops;
             for (const auto& bus : list_of_busses_) {
                 if (bus->stops.empty()) {
                     continue;
                 }
-                if (bus_nomber_in_array >= global_settings_.color_palette.size()) {
-                    bus_nomber_in_array = 0;
+                if (bus_number_in_array >= global_settings_.color_palette.size()) {
+                    bus_number_in_array = 0;
                 }
-                DrowRouteNames(project, bus_nomber_in_array, bus, target);
-                ++bus_nomber_in_array;
+                DrowRouteNames(project, bus_number_in_array, bus, target);
+                ++bus_number_in_array;
             }
             int size_of_array_no_repetitions = 0;
             for (const auto& bus : list_of_busses_) {
@@ -137,9 +137,9 @@ namespace transport {
             DrowStopNames(target, name_stops);
         }
 
-        void MapRender::DrowPath(const SphereProjector& project, long unsigned int& bus_nomber_in_array, ::transport::detail::Bus* bus, ::svg::ObjectContainer& target) {
+        void MapRender::DrowPath(const SphereProjector& project, long unsigned int& bus_number_in_array, ::transport::detail::Bus* bus, ::svg::ObjectContainer& target) {
             ::transport::svg::detail::PathSettings path_settings;
-            path_settings.stroke = global_settings_.color_palette[bus_nomber_in_array];
+            path_settings.stroke = global_settings_.color_palette[bus_number_in_array];
 
             path_settings.stroke_width = global_settings_.line_width;
 
@@ -147,17 +147,17 @@ namespace transport {
             path.Draw(target);
         }
 
-        void MapRender::DrowRouteNames(const SphereProjector& project, long unsigned int& bus_nomber_in_array, ::transport::detail::Bus* bus, ::svg::ObjectContainer& target) {
+        void MapRender::DrowRouteNames(const SphereProjector& project, long unsigned int& bus_number_in_array, ::transport::detail::Bus* bus, ::svg::ObjectContainer& target) {
             auto stop_begin = *(bus->stops.begin());
             ::svg::Point position = project(stop_begin->coordinat);
-            RouteNames route_names(bus->bus_nomber, position, global_settings_, global_settings_.color_palette[bus_nomber_in_array]);
+            RouteNames route_names(bus->bus_number, position, global_settings_, global_settings_.color_palette[bus_number_in_array]);
             route_names.Draw(target);
 
             if (!bus->is_circular) {
                 auto stop_end = *(bus->stops.end()-1);
                 if (stop_end != stop_begin) {
                     ::svg::Point position = project(stop_end->coordinat);
-                    RouteNames route_names(bus->bus_nomber, position, global_settings_, global_settings_.color_palette[bus_nomber_in_array]);
+                    RouteNames route_names(bus->bus_number, position, global_settings_, global_settings_.color_palette[bus_number_in_array]);
                     route_names.Draw(target);
                 }
             }           
