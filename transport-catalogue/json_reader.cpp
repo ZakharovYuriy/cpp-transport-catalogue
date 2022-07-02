@@ -11,6 +11,7 @@
 
 #include "json.h"
 #include "json_reader.h"
+#include "json_builder.h"
 #include "map_renderer.h"
 #include "transport_catalogue.h"
 
@@ -25,7 +26,7 @@ namespace transport {
 		void Reader::ReadDocumentInCatalogue(std::istream& i_stream, Catalogue& catalogue) {
 			using namespace std::string_literals;
 
-			::json::Dict dict = ::json::Load(i_stream).GetRoot().AsMap();
+			::json::Dict dict = ::json::Load(i_stream).GetRoot().AsDict();
 			if (dict.count("base_requests"s)) {
 				ReadBaseRequests(dict.at("base_requests"s), catalogue);
 			}
@@ -56,7 +57,7 @@ namespace transport {
 			);
 
 			std::unordered_map<std::string_view, int> real_distances;
-			for (const auto& [name, distance] : map_stop_or_bus.at("road_distances"s).AsMap()) {
+			for (const auto& [name, distance] : map_stop_or_bus.at("road_distances"s).AsDict()) {
 				real_distances[name] = distance.AsInt();
 			}
 			catalogue.SetDistancesToStop(map_stop_or_bus.at("name"s).AsString(), real_distances);
@@ -79,13 +80,13 @@ namespace transport {
 			using namespace std::string_literals;
 			if (!stops_and_buses.AsArray().empty()) {
 				for (const auto& stop_or_bus : stops_and_buses.AsArray()) {
-					const auto& map_stop_or_bus = stop_or_bus.AsMap();
+					const auto& map_stop_or_bus = stop_or_bus.AsDict();
 					if (map_stop_or_bus.at("type"s).AsString() == "Stop"s) {
 						StopRequest(map_stop_or_bus, catalogue);
 					}
 				}
 				for (const auto& stop_or_bus : stops_and_buses.AsArray()) {
-					const auto& map_stop_or_bus = stop_or_bus.AsMap();
+					const auto& map_stop_or_bus = stop_or_bus.AsDict();
 					if (map_stop_or_bus.at("type"s).AsString() == "Bus"s) {
 						BusRequest(map_stop_or_bus, catalogue);
 					}
@@ -98,7 +99,7 @@ namespace transport {
 			using namespace std::string_literals;
 			if (requests.IsArray()) {
 				for (const auto& request : requests.AsArray()) {
-					::json::Dict dict = request.AsMap();
+					::json::Dict dict = request.AsDict();
 					::transport::json::detail::Request
 						req(dict.at("id"s).AsInt(), dict.at("type"s).AsString());
 
@@ -115,43 +116,50 @@ namespace transport {
 
 		::json::Node Reader::ReadBusInfo(const json::detail::Request& request, Catalogue& catalogue) {
 			using namespace std::string_literals;
-			::json::Dict answer;
+			auto builder = ::json::Builder{};
+			builder.StartDict();
 			if (!request.name.empty() && catalogue.GetBusInfo(request.name).not_empty) {
 				auto bus_info = catalogue.GetBusInfo(request.name);
-				answer["curvature"s] = ::json::Node{ bus_info.distance };
-				answer["request_id"s] = ::json::Node{ request.id };
-				answer["route_length"s] = ::json::Node{ bus_info.real_distance };
-				answer["stop_count"s] = ::json::Node{ bus_info.number_of_stops };
-				answer["unique_stop_count"s] = ::json::Node{ bus_info.unic_stops };
+				builder.Key("curvature"s).Value(bus_info.distance)
+					.Key("request_id"s).Value(request.id)
+					.Key("route_length"s).Value(bus_info.real_distance)
+					.Key("stop_count"s).Value(bus_info.number_of_stops)
+					.Key("unique_stop_count"s).Value(bus_info.unic_stops);
 			}
 			else {
-				answer["request_id"s] = ::json::Node{ request.id };
-				answer["error_message"s] = ::json::Node{ "not found"s };
+				builder.Key("request_id"s).Value(request.id)
+					.Key("error_message"s).Value("not found"s);
 			}
-			return ::json::Node{ answer };
+			builder.EndDict();
+			return builder.Build();
 		}
 		::json::Node Reader::ReadStopInfo(const json::detail::Request& request, Catalogue& catalogue) {
 			using namespace std::string_literals;
-			::json::Dict answer;
+			auto builder = ::json::Builder{};
+			builder.StartDict();
 			if (!request.name.empty() && catalogue.GetStopInfo(request.name).exist) {
 				auto stop_info = catalogue.GetStopInfo(request.name);
-				::json::Array buses;
-				for (const auto& bus : stop_info.buses) {
-					buses.push_back(::json::Node{ static_cast<std::string>(bus) });
-				}
-				answer["buses"s] = ::json::Node{ buses };
-				answer["request_id"s] = ::json::Node{ request.id };
+				auto buses = ::json::Builder{};
+				buses.StartArray();
+					for (const auto& bus : stop_info.buses) {
+						buses.Value(static_cast<std::string>(bus));
+					}
+				buses.EndArray();
+
+				builder.Key("buses"s).Value(buses.Build())
+					.Key("request_id"s).Value(request.id);
 			}
 			else {
-				answer["request_id"s] = ::json::Node{ request.id };
-				answer["error_message"s] = ::json::Node{ "not found"s };
+				builder.Key("request_id"s).Value(request.id)
+					.Key("error_message"s).Value("not found"s);
 			}
-			return ::json::Node{ answer };
+			builder.EndDict();
+			return builder.Build();
 		}
 
 		::json::Node Reader::ReadMapInfo(const json::detail::Request& request, Catalogue& catalogue) {
 			using namespace std::string_literals;
-			::json::Dict answer;
+			auto builder = ::json::Builder{};
 
 			::svg::Document doc;
 			::transport::svg::MapRender map_render(render_settings_);
@@ -159,28 +167,32 @@ namespace transport {
 			std::ostringstream out;
 			doc.Render(out);
 
-			answer["map"s] = ::json::Node{ out.str() };
-			answer["request_id"s] = ::json::Node{ request.id };
+			builder.StartDict()
+				.Key("map"s).Value(out.str())
+				.Key("request_id"s).Value(request.id)
+			.EndDict();
 
-			return ::json::Node{ answer };
+			return builder.Build();
 		}
 
 		::json::Document Reader::GetOutputDoc(Catalogue& catalogue) {
 			using namespace std::string_literals;
-			::json::Array RequestsResponse;
+			auto builder = ::json::Builder{};
+			builder.StartArray();
 
 			for (const auto& request : requests_) {
 				if (request.type == ::transport::json::detail::RequestType::Bus) {
-					RequestsResponse.push_back(ReadBusInfo(request, catalogue));
+					builder.Value(ReadBusInfo(request, catalogue));
 				}
 				else if (request.type == ::transport::json::detail::RequestType::Stop) {
-					RequestsResponse.push_back(ReadStopInfo(request, catalogue));
+					builder.Value(ReadStopInfo(request, catalogue));
 				}
 				else if (request.type == ::transport::json::detail::RequestType::Map) {
-					RequestsResponse.push_back(ReadMapInfo(request, catalogue));
+					builder.Value(ReadMapInfo(request, catalogue));
 				}
 			}
-			::json::Document doc(::json::Node{ RequestsResponse });
+			builder.EndArray();
+			::json::Document doc(builder.Build());
 			return doc;
 		}
 
@@ -217,8 +229,8 @@ namespace transport {
 
 		::transport::svg::detail::Settings Reader::ReadRenderSettings(::json::Node& requests) {
 			using namespace std::string_literals;
-			if (requests.IsMap()) {
-				const ::json::Dict& dict = requests.AsMap();
+			if (requests.IsDict()) {
+				const ::json::Dict& dict = requests.AsDict();
 				::transport::svg::detail::Settings settings;
 
 				settings.width = dict.at("width"s).AsDouble();
