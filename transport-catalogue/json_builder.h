@@ -62,6 +62,8 @@ namespace json {
         Node root_;
         std::stack<Node> nodes_stack_;
         std::vector<Node*> main_nodes_stack_;
+
+        void StartObject(const Node&&);
         
         int depth_of_dicts = 0;//текущее количество вложенных словарей
         int double_key_check = 0;//количество открытых ключей без значения

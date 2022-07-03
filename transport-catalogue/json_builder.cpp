@@ -47,10 +47,15 @@ namespace json{
 			return *this;
 		}
 	}
+
 	bool Builder::CheckObjectCompleted() {
 		if (nodes_stack_.size() == 1) {
-			if (!(nodes_stack_.top().IsArray() && nodes_stack_.top().AsArray().empty())) {
-				if (!(nodes_stack_.top().AsDict().empty() && nodes_stack_.top().AsDict().empty())) {
+			if (!(nodes_stack_.top().IsArray() &&
+				  nodes_stack_.top().AsArray().empty())) {
+
+				if (!(nodes_stack_.top().AsDict().empty() && 
+						nodes_stack_.top().AsDict().empty())) {
+
 					return true;
 				}
 			}
@@ -110,42 +115,36 @@ namespace json{
 		return *this;
 	}
 
+	void Builder::StartObject(const Node&& obj) {
+		if (CheckObjectCompleted()) {
+			throw std::logic_error("the object is completed");
+		}
+
+		if (WrongValuePlace()) {
+			throw std::logic_error("wrong value place");
+		}
+
+		last_key_is_empty_ = false;
+
+		nodes_stack_.push(move(obj));
+		main_nodes_stack_.push_back(&nodes_stack_.top());
+	}
+
 	detail::DictItemContext Builder::StartDict() {
 		//открываем новый словарь- увеличивем глубину
 		++depth_of_dicts;
 		
-
-		if (CheckObjectCompleted()) {
-			throw std::logic_error("the object is completed");
-		}
-
-		if (WrongValuePlace()) {
-			throw std::logic_error("wrong value place");
-		}
+		StartObject(move(Dict()));
 		
-		last_key_is_empty_ = false;
-
-		nodes_stack_.push(move(Dict()));
-		main_nodes_stack_.push_back(&nodes_stack_.top());
-
 		return detail::DictItemContext(this);
 	}
 
 	detail::ArrayItemContext Builder::StartArray() {
-		if (CheckObjectCompleted()) {
-			throw std::logic_error("the object is completed");
-		}
+		StartObject(move(Array()));
 
-		if (WrongValuePlace()) {
-			throw std::logic_error("wrong value place");
-		}
-
-		last_key_is_empty_ = false;
-
-		nodes_stack_.push(move(Array()));
-		main_nodes_stack_.push_back(&nodes_stack_.top());
 		return detail::ArrayItemContext(this);
 	}
+
 	Builder& Builder::EndDict() {		
 		if (CheckObjectCompleted()) {
 			throw std::logic_error("the object is completed");
@@ -179,6 +178,7 @@ namespace json{
 		}
 		return *this;
 	}
+
 	Builder& Builder::EndArray() {
 		
 		if (CheckObjectCompleted()) {
@@ -205,6 +205,7 @@ namespace json{
 
 		return *this;
 	}
+
 	Node Builder::Build() {
 		if (nodes_stack_.empty()) {
 			throw std::logic_error("the object is not finished");
