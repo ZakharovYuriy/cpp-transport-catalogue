@@ -4,10 +4,6 @@
 
 #include "json.h"
 #include "transport_catalogue.h"
-/*
- * Здесь можно разместить код наполнения транспортного справочника данными из JSON,
- * а также код обработки запросов к базе и формирование массива ответов в формате JSON
- */
 
 namespace transport {
 	namespace json {
@@ -27,9 +23,15 @@ namespace transport {
 			::json::Node ReadStopInfo(const json::detail::Request&, Catalogue&);
 			::json::Node ReadBusInfo(const json::detail::Request&, Catalogue&);
 			::json::Node ReadMapInfo(const json::detail::Request&, Catalogue&);
+			::json::Node ReadRoutInfo(const json::detail::Request&, Catalogue&);
+
+			::json::Node GraphVertexHandler(const std::vector<graph::EdgeId>& edge_nomber, Catalogue& catalogue);
+			::json::Node AddStopItem(std::string_view stop_name, double time);
+			::json::Node AddBussItem(std::string_view bus_name, int span_count, double time);
 
 			void ReadBaseRequests(::json::Node& stops_and_buses, Catalogue& catalogue);
 			void SetStatRequests(::json::Node& requests);
+			void ReadRoutingSettings(::json::Node& settings, Catalogue& catalogue);
 			::json::Document GetOutputDoc(Catalogue& catalogue);
 			::transport::svg::detail::Settings ReadRenderSettings(::json::Node& requests);
 		};

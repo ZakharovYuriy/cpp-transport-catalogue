@@ -1,4 +1,8 @@
-//#include "log_duration.h"
+//#define DEBUG
+//#define DEBUG_DURATION
+#ifdef DEBUG_DURATION
+    #include "log_duration.h"
+#endif
 
 #include <iostream>
 #include <chrono>
@@ -13,28 +17,34 @@ using namespace std;
 
 void TestSVG() {
     ::transport::Catalogue transport;
-    std::ifstream in("C:\\Games\\TestInput2.txt"); // окрываем файл для чтения
+    std::ifstream in("C:\\Games\\TestInput6.txt"); // окрываем файл для чтения
     std::ofstream out;          // поток для записи
-    out.open("C:\\Games\\TestOutput2.svg"); // окрываем файл для записи
+    out.open("C:\\Games\\TestOutput6.svg"); // окрываем файл для записи
    
     ::transport::json::Reader reader;
-    //{LOG_DURATION("readDoc"s);
+    {
+#ifdef DEBUG_DURATION
+    LOG_DURATION("readDoc"s);
+#endif
         reader.ReadDocumentInCatalogue(in, transport);
-    //}
+    }
 
-    //{LOG_DURATION("Drow"s);
+    {
+#ifdef DEBUG_DURATION
+    LOG_DURATION("Drow"s);
+#endif
     ::svg::Document doc;
     ::transport::svg::MapRender map_render(reader.GetRenderSettings());
     map_render.DrowMap(transport, doc);
     doc.Render(out);
     doc.Render(cout);
-    // }
+    }
 }
-void TestJSON() {
+void TestFromFile() {
     ::transport::Catalogue transport;
-    std::ifstream in("C:\\Games\\TestInput2.txt"); // окрываем файл для чтения
+    std::ifstream in("C:\\Games\\TestInput4.txt"); // окрываем файл для чтения
     std::ofstream out;          // поток для записи
-    out.open("C:\\Games\\TestOutput3.txt"); // окрываем файл для записи
+    out.open("C:\\Games\\TestOutput4.txt"); // окрываем файл для записи
 
     ::transport::json::Reader reader;
 
@@ -42,7 +52,7 @@ void TestJSON() {
     reader.ResponseToRequests(out, transport);
 
 }
-void JSONoutput() {
+void TestFromSTDIN_STDOUT() {
     ::transport::Catalogue transport;
     ::transport::json::Reader reader;
     reader.ReadDocumentInCatalogue(cin, transport);
@@ -50,7 +60,7 @@ void JSONoutput() {
 }
 
 int main() {
-    TestSVG();
-    TestJSON();
-    JSONoutput();
+    //TestSVG();
+    //TestFromSTDIN_STDOUT();
+    TestFromFile();
 }

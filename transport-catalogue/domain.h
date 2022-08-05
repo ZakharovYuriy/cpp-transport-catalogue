@@ -1,10 +1,12 @@
 #pragma once
 
 #include <array>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "geo.h"
+#include "graph.h"
 /*
  * В этом файле вы можете разместить классы/структуры, которые являются частью предметной области (domain)
  * вашего приложения и не зависят от транспортного справочника. Например Автобусные маршруты и Остановки. 
@@ -19,6 +21,26 @@
 
 namespace transport {
 	namespace detail {
+		struct RoutingSettings {
+			int bus_wait_time = 0;
+			double bus_velocity = 0.0;
+		};
+
+		struct VertexIdType {
+			graph::VertexId waiting;
+			graph::VertexId travel;
+		};
+
+		enum VertexType {
+			Waiting,
+			Travel
+		};		
+
+		struct EdgeInfo {
+			int stations_passed = 0;
+			std::string_view bus_name;
+		};
+
 		struct Stop {
 			Stop() = default;
 			Stop(const std::string&& name, const ::geo::Coordinates& coord) :name_of_stop{ name }, coordinat{ coord }{
@@ -27,6 +49,17 @@ namespace transport {
 			}
 			std::string name_of_stop = "";
 			::geo::Coordinates coordinat = { 0,0 };
+		};
+
+		struct VertexIdInfo {
+			VertexType vertex_type;
+			Stop* stop_pointer;
+			std::string_view bus_name;
+		};
+
+		struct EdgeRange {
+			int from;
+			int to;
 		};
 
 		struct Bus {
@@ -77,7 +110,7 @@ namespace transport {
 
 		private:
 			std::hash<const void*>d_hasher_;
-		};
+		};	
 	}
 
 	namespace json {
@@ -86,7 +119,17 @@ namespace transport {
 				Bus,
 				Stop,
 				Map,
+				Route,
 				NoType
+			};	
+
+			struct RouteRange {
+				RouteRange() = default;
+				RouteRange(std::string station_from, std::string station_to) :
+					from(station_from),to(station_to) {
+				}
+				std::string from = "";
+				std::string to = "";
 			};
 
 			struct Request {
@@ -101,10 +144,14 @@ namespace transport {
 					if (type_str == "Stop") {
 						type = RequestType::Stop;
 					}
+					if (type_str == "Route") {
+						type = RequestType::Route;
+					}
 				}
 				int id=0;
 				RequestType type= RequestType::NoType;
-				std::string name="";
+				std::optional <std::string> name="";
+				std::optional <RouteRange> route_range;
 			};
 		}
 	}

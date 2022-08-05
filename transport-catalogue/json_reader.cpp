@@ -14,12 +14,8 @@
 #include "json_builder.h"
 #include "map_renderer.h"
 #include "transport_catalogue.h"
-
-
-/*
- * Здесь можно разместить код наполнения транспортного справочника данными из JSON,
- * а также код обработки запросов к базе и формирование массива ответов в формате JSON
- */
+#include "transport_router.h"
+#include "router.h"
 
 namespace transport {
 	namespace json {
@@ -35,6 +31,9 @@ namespace transport {
 			}
 			if (dict.count("render_settings"s)) {
 				render_settings_ = ReadRenderSettings(dict.at("render_settings"s));
+			}
+			if (dict.count("routing_settings"s)) {
+				ReadRoutingSettings(dict.at("routing_settings"s), catalogue);
 			}
 		}
 
@@ -95,6 +94,17 @@ namespace transport {
 			}
 		}
 
+		void Reader::ReadRoutingSettings(::json::Node& settings, Catalogue& catalogue) {
+			using namespace std::string_literals;
+			using RoutingSettings = transport::detail::RoutingSettings;
+			if (!settings.AsDict().empty()) {
+				const auto& map_settings = settings.AsDict();
+				catalogue.SetRoutingSettings(RoutingSettings{
+					map_settings.at("bus_wait_time"s).AsInt(),
+					map_settings.at("bus_velocity"s).AsDouble()});
+			}
+		}
+
 		void Reader::SetStatRequests(::json::Node& requests) {
 			using namespace std::string_literals;
 			if (requests.IsArray()) {
@@ -105,6 +115,10 @@ namespace transport {
 
 					if (dict.count("name"s)) {
 						req.name = dict.at("name"s).AsString();
+					}
+					if (dict.count("from"s)) {
+						json::detail::RouteRange route_range(dict.at("from"s).AsString(),dict.at("to"s).AsString());
+						req.route_range = route_range;
 					}
 					requests_.push_back(req);
 				}
@@ -118,17 +132,17 @@ namespace transport {
 			using namespace std::string_literals;
 			auto builder = ::json::Builder{};
 			builder.StartDict();
-			if (!request.name.empty() && catalogue.GetBusInfo(request.name).not_empty) {
-				auto bus_info = catalogue.GetBusInfo(request.name);
-				builder.Key("curvature"s).Value(bus_info.distance)
-					.Key("request_id"s).Value(request.id)
-					.Key("route_length"s).Value(bus_info.real_distance)
-					.Key("stop_count"s).Value(bus_info.number_of_stops)
-					.Key("unique_stop_count"s).Value(bus_info.unic_stops);
+			if (request.name.has_value() && catalogue.GetBusInfo(request.name.value()).not_empty) {
+				auto bus_info = catalogue.GetBusInfo(request.name.value());
+				builder.Key("curvature"s).Value(bus_info.distance).
+					Key("request_id"s).Value(request.id).
+					Key("route_length"s).Value(bus_info.real_distance).
+					Key("stop_count"s).Value(bus_info.number_of_stops).
+					Key("unique_stop_count"s).Value(bus_info.unic_stops);
 			}
 			else {
-				builder.Key("request_id"s).Value(request.id)
-					.Key("error_message"s).Value("not found"s);
+				builder.Key("request_id"s).Value(request.id).
+					Key("error_message"s).Value("not found"s);
 			}
 			builder.EndDict();
 			return builder.Build();
@@ -137,8 +151,8 @@ namespace transport {
 			using namespace std::string_literals;
 			auto builder = ::json::Builder{};
 			builder.StartDict();
-			if (!request.name.empty() && catalogue.GetStopInfo(request.name).exist) {
-				auto stop_info = catalogue.GetStopInfo(request.name);
+			if (request.name.has_value() && catalogue.GetStopInfo(request.name.value()).exist) {
+				auto stop_info = catalogue.GetStopInfo(request.name.value());
 				auto buses = ::json::Builder{};
 				buses.StartArray();
 					for (const auto& bus : stop_info.buses) {
@@ -146,12 +160,12 @@ namespace transport {
 					}
 				buses.EndArray();
 
-				builder.Key("buses"s).Value(buses.Build())
-					.Key("request_id"s).Value(request.id);
+				builder.Key("buses"s).Value(buses.Build()).
+					Key("request_id"s).Value(request.id);
 			}
 			else {
-				builder.Key("request_id"s).Value(request.id)
-					.Key("error_message"s).Value("not found"s);
+				builder.Key("request_id"s).Value(request.id).
+					Key("error_message"s).Value("not found"s);
 			}
 			builder.EndDict();
 			return builder.Build();
@@ -167,11 +181,93 @@ namespace transport {
 			std::ostringstream out;
 			doc.Render(out);
 
-			builder.StartDict()
-				.Key("map"s).Value(out.str())
-				.Key("request_id"s).Value(request.id)
-			.EndDict();
+			builder.StartDict().
+				Key("map"s).Value(out.str()).
+				Key("request_id"s).Value(request.id).
+			EndDict();
 
+			return builder.Build();
+		}
+
+		::json::Node Reader::AddStopItem(std::string_view stop_name,double time) {
+			using namespace std::string_literals;
+			auto builder = ::json::Builder{};
+			builder.StartDict().
+				Key("stop_name"s).Value(static_cast<std::string>(stop_name)).
+				Key("time"s).Value(time).
+				Key("type"s).Value("Wait"s).
+			EndDict();
+			return builder.Build();
+		}
+
+		::json::Node Reader::AddBussItem(std::string_view bus_name, int span_count, double time) {
+			using namespace std::string_literals;
+			auto builder = ::json::Builder{};
+			builder.StartDict().
+				Key("bus"s).Value(static_cast<std::string>(bus_name)).
+				Key("span_count"s).Value(span_count).
+				Key("time"s).Value(time).
+				Key("type"s).Value("Bus"s).
+			EndDict();
+			return builder.Build();
+		}
+
+		::json::Node Reader::GraphVertexHandler(const std::vector<graph::EdgeId>& edge_nomber, Catalogue& catalogue) {
+			using namespace std::string_literals;
+			auto builder = ::json::Builder{};
+			builder.StartArray();
+
+			for (const auto edgeId : edge_nomber) {
+				const auto& edge = catalogue.GetGraph().GetEdge(edgeId);
+				const auto& vertex_info_from = catalogue.Get_Stop_Info_By_VertexId(edge.from);
+
+				if (vertex_info_from.vertex_type == ::transport::detail::VertexType::Waiting) {
+					builder.Value(AddStopItem(vertex_info_from.stop_pointer->name_of_stop, edge.weight));
+				}
+				else {
+					const auto& edge_info = catalogue.GetEdgeInfo(edge.from, edge.to);
+					builder.Value(AddBussItem(edge_info.bus_name, edge_info.stations_passed, edge.weight));
+				}
+			}
+
+
+			builder.EndArray();
+			return builder.Build();
+		}
+
+		::json::Node Reader::ReadRoutInfo(const json::detail::Request& request, Catalogue& catalogue) {
+			using namespace std::string_literals;
+			auto builder = ::json::Builder{};
+			builder.StartDict();
+			if (!catalogue.GetGraph().IsComplete()) {
+				catalogue.BuildGraph();
+			}
+			static graph::Router<double> router(catalogue.GetGraph());
+
+			if (catalogue.Get_range_vertexId(request.route_range.value().from,
+				request.route_range.value().to).has_value()) {
+
+				auto [vertID_from, vertID_to] = catalogue.Get_range_vertexId(request.route_range.value().from,
+					request.route_range.value().to).value();
+
+				auto rout = router.BuildRoute(vertID_from.waiting, vertID_to.waiting);
+
+				if (rout.has_value()) {
+					builder.Key("request_id"s).Value(request.id)
+						.Key("total_time"s).Value(rout.value().weight);
+					builder.Key("items"s).Value(GraphVertexHandler(rout.value().edges, catalogue));
+				}
+				else {
+					builder.Key("error_message"s).Value("not found"s)
+						.Key("request_id"s).Value(request.id);
+				}
+			}
+			else {
+				builder.Key("error_message"s).Value("not found"s)
+					.Key("request_id"s).Value(request.id);
+			}
+
+			builder.EndDict();
 			return builder.Build();
 		}
 
@@ -189,6 +285,9 @@ namespace transport {
 				}
 				else if (request.type == ::transport::json::detail::RequestType::Map) {
 					builder.Value(ReadMapInfo(request, catalogue));
+				}
+				else if (request.type == ::transport::json::detail::RequestType::Route) {
+					builder.Value(ReadRoutInfo(request, catalogue));
 				}
 			}
 			builder.EndArray();
