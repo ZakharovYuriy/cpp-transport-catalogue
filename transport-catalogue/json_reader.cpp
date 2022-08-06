@@ -15,7 +15,6 @@
 #include "map_renderer.h"
 #include "transport_catalogue.h"
 #include "transport_router.h"
-#include "router.h"
 
 namespace transport {
 	namespace json {
@@ -33,7 +32,7 @@ namespace transport {
 				render_settings_ = ReadRenderSettings(dict.at("render_settings"s));
 			}
 			if (dict.count("routing_settings"s)) {
-				ReadRoutingSettings(dict.at("routing_settings"s), catalogue);
+				ReadRoutingSettings(dict.at("routing_settings"s));
 			}
 		}
 
@@ -94,14 +93,12 @@ namespace transport {
 			}
 		}
 
-		void Reader::ReadRoutingSettings(::json::Node& settings, Catalogue& catalogue) {
+		void Reader::ReadRoutingSettings(::json::Node& settings) {
 			using namespace std::string_literals;
-			using RoutingSettings = transport::detail::RoutingSettings;
 			if (!settings.AsDict().empty()) {
 				const auto& map_settings = settings.AsDict();
-				catalogue.SetRoutingSettings(RoutingSettings{
-					map_settings.at("bus_wait_time"s).AsInt(),
-					map_settings.at("bus_velocity"s).AsDouble()});
+				routing_settings_.bus_velocity = map_settings.at("bus_velocity"s).AsDouble();
+				routing_settings_.bus_wait_time = map_settings.at("bus_wait_time"s).AsInt();
 			}
 		}
 
@@ -212,20 +209,20 @@ namespace transport {
 			return builder.Build();
 		}
 
-		::json::Node Reader::GraphVertexHandler(const std::vector<graph::EdgeId>& edge_nomber, Catalogue& catalogue) {
+		::json::Node Reader::GraphVertexHandler(const std::vector<graph::EdgeId>& edge_nomber) {
 			using namespace std::string_literals;
 			auto builder = ::json::Builder{};
 			builder.StartArray();
 
 			for (const auto edgeId : edge_nomber) {
-				const auto& edge = catalogue.GetGraph().GetEdge(edgeId);
-				const auto& vertex_info_from = catalogue.Get_Stop_Info_By_VertexId(edge.from);
+				const auto& edge = builded_graph_.GetGraph().GetEdge(edgeId);
+				const auto& vertex_info_from = builded_graph_.Get_Stop_Info_By_VertexId(edge.from);
 
 				if (vertex_info_from.vertex_type == ::transport::detail::VertexType::Waiting) {
 					builder.Value(AddStopItem(vertex_info_from.stop_pointer->name_of_stop, edge.weight));
 				}
 				else {
-					const auto& edge_info = catalogue.GetEdgeInfo(edge.from, edge.to);
+					const auto& edge_info = builded_graph_.GetEdgeInfo(edge.from, edge.to);
 					builder.Value(AddBussItem(edge_info.bus_name, edge_info.stations_passed, edge.weight));
 				}
 			}
@@ -239,15 +236,15 @@ namespace transport {
 			using namespace std::string_literals;
 			auto builder = ::json::Builder{};
 			builder.StartDict();
-			if (!catalogue.GetGraph().IsComplete()) {
-				catalogue.BuildGraph();
+			if (!builded_graph_.GetGraph().IsComplete()) {
+				builded_graph_ = GraphBuilder(catalogue, routing_settings_.bus_wait_time, routing_settings_.bus_velocity);
 			}
-			static graph::Router<double> router(catalogue.GetGraph());
+			static graph::Router<double> router(builded_graph_.GetGraph());
 
-			if (catalogue.Get_range_vertexId(request.route_range.value().from,
+			if (builded_graph_.Get_range_vertexId(request.route_range.value().from,
 				request.route_range.value().to).has_value()) {
 
-				auto [vertID_from, vertID_to] = catalogue.Get_range_vertexId(request.route_range.value().from,
+				auto [vertID_from, vertID_to] = builded_graph_.Get_range_vertexId(request.route_range.value().from,
 					request.route_range.value().to).value();
 
 				auto rout = router.BuildRoute(vertID_from.waiting, vertID_to.waiting);
@@ -255,7 +252,7 @@ namespace transport {
 				if (rout.has_value()) {
 					builder.Key("request_id"s).Value(request.id)
 						.Key("total_time"s).Value(rout.value().weight);
-					builder.Key("items"s).Value(GraphVertexHandler(rout.value().edges, catalogue));
+					builder.Key("items"s).Value(GraphVertexHandler(rout.value().edges));
 				}
 				else {
 					builder.Key("error_message"s).Value("not found"s)

@@ -18,7 +18,7 @@ using namespace ::transport;
 void Catalogue::SetDistancesToStop(const std::string_view current_name, const std::unordered_map<std::string_view, int> real_distances) {
 	if (!real_distances.empty()) {
 		for (const auto& [name, length] : real_distances) {
-			if (name_of_stop_.count(name)) {
+			if (name_of_stop_.count(name) != 0) {
 				lengths[{name_of_stop_.at(current_name), name_of_stop_.at(name)}] = length;
 			}
 			else {
@@ -32,7 +32,7 @@ void Catalogue::SetDistancesToStop(const std::string_view current_name, const st
 
 void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& coordinate) {
 	::transport::detail::Stop* stop_name;
-		if (!name_of_stop_.count(stop_n)) {
+		if (!name_of_stop_.count(stop_n) != 0) {
 			stops_.push_back(::transport::detail::Stop(std::move(stop_n), coordinate));
 			name_of_stop_[stops_.back().name_of_stop] = &stops_.back();
 			stop_name = &stops_.back();
@@ -68,8 +68,8 @@ void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& co
 		return *name_of_bus_.at(number);
 	}
 
-	Catalogue::Distance Catalogue::ComputeRealAndMapDistance(const ::transport::detail::Bus& bus) const {
-		Distance distance;
+	detail::Distance Catalogue::ComputeRealAndMapDistance(const ::transport::detail::Bus& bus) const {
+		detail::Distance distance;
 		auto stop_adr = ::transport::detail::Stop();
 		::transport::detail::Stop* last_step = &stop_adr;
 
@@ -79,7 +79,7 @@ void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& co
 				continue;
 			}
 
-			if (lengths.count({ last_step,stop })) {
+			if (lengths.count({ last_step,stop }) != 0) {
 				distance.real_distance += lengths.at({ last_step,stop });
 			}
 			else {
@@ -99,7 +99,7 @@ void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& co
 					continue;
 				}
 
-				if (lengths.count({ last_step_reverse,bus.stops[iter] })) {
+				if (lengths.count({ last_step_reverse,bus.stops[iter] }) != 0) {
 					distance.real_distance += lengths.at({ last_step_reverse,bus.stops[iter] });
 				}
 				else {
@@ -114,7 +114,7 @@ void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& co
 	}
 
 	detail::BusInfo Catalogue::GetBusInfo(const std::string& bus_number){
-		if (name_of_bus_.count(bus_number)) {
+		if (name_of_bus_.count(bus_number) != 0) {
 			const auto &bus = *name_of_bus_[bus_number];
 			int quantity_stops = bus.stops.size();
 			
@@ -127,7 +127,7 @@ void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& co
 				uniq_stops.insert(stop);
 			}
 
-			Catalogue::Distance dist = ComputeRealAndMapDistance(bus);
+			detail::Distance dist = ComputeRealAndMapDistance(bus);
 			return detail::BusInfo(bus, quantity_stops, uniq_stops.size(), dist.real_distance, static_cast<double>(dist.real_distance) / static_cast<double>(dist.map_distance));
 		}
 		else {
@@ -136,8 +136,8 @@ void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& co
 	}
 
 	detail::StopInfo Catalogue::GetStopInfo(const std::string& stop_name){
-		if (name_of_stop_.count(stop_name)) {
-			if (stop_and_busses.count(stop_name)) {
+		if (name_of_stop_.count(stop_name) != 0) {
+			if (stop_and_busses.count(stop_name) != 0) {
 				std::vector<std::string_view>vect_to_sort(stop_and_busses[stop_name].begin(), stop_and_busses[stop_name].end());
 				std::sort(vect_to_sort.begin(), vect_to_sort.end());
 				return detail::StopInfo(name_of_stop_.at(stop_name), vect_to_sort);
@@ -176,269 +176,18 @@ void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& co
 		return coordinates;
 	}
 
-	std::pair<int, int> Catalogue::FindInVertexIdCounterOrСreate(::transport::detail::Stop* stop, ::transport::detail::Bus* bus) {
-		if (Stop_and_vertexId_.count(stop)) {
-			return { Stop_and_vertexId_.at(stop).waiting,
-			Stop_and_vertexId_.at(stop).travel };
-		}
-		Stop_and_vertexId_[stop] = detail::VertexIdType{ vertex_counter_,++vertex_counter_ };
-		vertexId_info[vertex_counter_ - 1] = { detail::Waiting, stop, bus->bus_number };
-		vertexId_info[vertex_counter_] = { detail::Travel, stop, bus->bus_number };
-		++vertex_counter_;
-
-		return { Stop_and_vertexId_.at(stop).waiting,
-			Stop_and_vertexId_.at(stop).travel };
+	const std::unordered_map<std::string_view, ::transport::detail::Stop*>& Catalogue::GetStopMap() const {
+		return name_of_stop_;
+	}
+	 std::deque<::transport::detail::Bus>& Catalogue::GetBuses() {
+		return busses_;
 	}
 
-	void Catalogue::AddEdgeForCircularBus(transport::detail::Bus& bus) {
-		if (!bus.stops.empty()) {
-			int iterations = bus.stops.size();
-
-			--iterations;
-			for (int i = 0; i < iterations; ++i) {
-				int distance = 0;
-				int number_of_stops = 0;
-				for (int n = 1; n < iterations; ++n) {
-					int nomber_of_second_st = i + n;
-					if (nomber_of_second_st == iterations) {
-						nomber_of_second_st = nomber_of_second_st - iterations;
-					}
-					if (nomber_of_second_st > iterations) {
-						continue;
-					}
-
-					graph::Edge<double> edge;
-					const auto& first_stop = name_of_stop_.at(bus.stops[i]->name_of_stop);
-					const auto& second_stop = name_of_stop_.at(bus.stops[nomber_of_second_st]->name_of_stop);
-
-					int nomber_before_second_st = nomber_of_second_st - 1;
-					if (nomber_of_second_st == 0) {
-						nomber_before_second_st = iterations - 1;
-					}
-					const auto& begore_second_stop = name_of_stop_.at(bus.stops[nomber_before_second_st]->name_of_stop);
-
-					const auto& [waiting_first_st, travel_first_st] = FindInVertexIdCounterOrСreate(first_stop, &bus);
-					const auto& [waiting_second_st, travel_second_st] = FindInVertexIdCounterOrСreate(second_stop, &bus);
-
-					++number_of_stops;
-					if (lengths.count({ begore_second_stop,second_stop })) {
-						distance += lengths.at({ begore_second_stop,second_stop });
-					}
-					else {
-						distance += lengths.at({ second_stop,begore_second_stop });
-					}
-
-					//из стоп в тревел
-					edge_range_info[{travel_first_st, waiting_second_st}].stations_passed = number_of_stops;
-					edge_range_info[{travel_first_st, waiting_second_st}].bus_name = bus.bus_number;
-					edge.from = travel_first_st;
-					edge.to = waiting_second_st;
-					edge.weight = (distance * 0.06) / routing_settings_.bus_velocity;
-					graph_.AddEdge(edge);
-
-					if (first_stop == second_stop) {
-						//прямое направление
-						edge.from = travel_first_st;
-						edge.to = travel_second_st;
-						edge.weight = routing_settings_.bus_wait_time;
-						graph_.AddEdge(edge);
-						//обратное направление
-						edge.from = travel_second_st;
-						edge.to = waiting_first_st;
-						edge.weight = routing_settings_.bus_wait_time;
-						graph_.AddEdge(edge);
-					}
-				}
-			}
-		}
+	const std::unordered_map < std::pair<::transport::detail::Stop*, ::transport::detail::Stop*>,
+		int, ::transport::detail::StopHasher >& Catalogue::GetLengthsMap() const {
+		return lengths;
 	}
 
-	void Catalogue::IterationAddingEdge(int from, int to, int& distance, int& number_of_stops, transport::detail::Bus& bus) {
-		graph::Edge<double> edge;
-		const auto& first_stop = name_of_stop_.at(bus.stops[from]->name_of_stop);
-		const auto& second_stop = name_of_stop_.at(bus.stops[to]->name_of_stop);
-
-		int nomber_begore_second_stop = to - 1;
-		if (from>to) {
-			nomber_begore_second_stop = to + 1;
-		}
-		const auto& begore_second_stop = name_of_stop_.at(bus.stops[nomber_begore_second_stop]->name_of_stop);
-
-		const auto& [waiting_first_st, travel_first_st] = FindInVertexIdCounterOrСreate(first_stop, &bus);
-		const auto& [waiting_second_st, travel_second_st] = FindInVertexIdCounterOrСreate(second_stop, &bus);
-
-		++number_of_stops;
-		if (lengths.count({ begore_second_stop,second_stop })) {
-			distance += lengths.at({ begore_second_stop,second_stop });
-		}
-		else {
-			distance += lengths.at({ second_stop,begore_second_stop });
-		}
-
-		//из стоп в тревел
-		edge_range_info[{travel_first_st, waiting_second_st}].stations_passed= number_of_stops;
-		edge_range_info[{travel_first_st, waiting_second_st}].bus_name = bus.bus_number;
-		edge.from = travel_first_st;
-		edge.to = waiting_second_st;
-		edge.weight = (distance * 0.06) / routing_settings_.bus_velocity;
-		graph_.AddEdge(edge);
-
-		if (first_stop == second_stop) {
-			//прямое направление
-			edge.from = travel_first_st;
-			edge.to = travel_second_st;
-			edge.weight = routing_settings_.bus_wait_time;
-			graph_.AddEdge(edge);
-			//обратное направление
-			edge.from = travel_second_st;
-			edge.to = waiting_first_st;
-			edge.weight = routing_settings_.bus_wait_time;
-			graph_.AddEdge(edge);
-		}		
-	}
-
-	void Catalogue::AddEdgeForNotCircularBus(transport::detail::Bus& bus) {
-		if (!bus.stops.empty()) {
-			int iterations = bus.stops.size();
-			for (int i = 0; i < iterations; ++i) {
-				int distance = 0;
-				int number_of_stops = 0;
-				for (int n = i + 1; n < iterations; ++n) {
-					IterationAddingEdge(i, n,number_of_stops, distance, bus);
-				}
-			}		
-			for (int i = iterations-1; i >0; --i) {
-				int distance = 0;
-				int number_of_stops = 0;
-				for (int n = i-1 ; n >= 0; --n) {
-					IterationAddingEdge(i, n, number_of_stops, distance, bus);
-				}
-			}
-		}
-	}
-
-	detail::EdgeInfo Catalogue::GetEdgeInfo(graph::VertexId from, graph::VertexId to) {
-		return edge_range_info.at({ from,to });
-	}
-	void Catalogue::SetRoutingSettings(detail::RoutingSettings settings) {		
-		routing_settings_ = settings;
-	}
-	detail::RoutingSettings Catalogue::GetRoutingSettings() {
-		return routing_settings_;
-	}
-
-	void Catalogue::BuildGraph() {
-		if (graph_.IsComplete()) {
-			return;
-		}
-
-		graph_ = Graph(stops_.size()*2);
-
-		for (auto& bus : busses_) {
-			int stop_counter = 0;
-			bool first_end_stop = true;
-			//bool second_end_stop = true;
-			auto stop_adr = ::transport::detail::Stop();
-			::transport::detail::Stop* last_step = &stop_adr;
-
-			for (const auto& stop : bus.stops) {
-				++stop_counter;
-
-				double distance = 0;
-
-				if (last_step->name_of_stop.empty()) {
-					last_step = stop;
-					continue;
-				}
-				if (lengths.count({ last_step,stop })) {
-					distance += lengths.at({ last_step,stop });
-				}
-				else {
-					distance += lengths.at({ stop,last_step });
-				}
-
-				graph::Edge<double> edge;
-
-				if (first_end_stop) {
-					first_end_stop = false;
-					if (!Stop_and_vertexId_.count(last_step)) {
-						const auto& [waiting_first_st, travel_first_st] = FindInVertexIdCounterOrСreate(last_step, &bus);
-						//создание ребра для первой остановки
-						//прямое направление
-						first_end_stop = false;
-						edge.from = waiting_first_st;
-						edge.to = travel_first_st;
-						edge.weight = routing_settings_.bus_wait_time;
-						graph_.AddEdge(edge);
-						//обратное направление
-						edge.from = travel_first_st;
-						edge.to = waiting_first_st;
-						edge.weight = 0;
-						graph_.AddEdge(edge);
-					}
-				}
-
-				if (!Stop_and_vertexId_.count(stop)) {
-					const auto& [waiting_second_st, travel_second_st] = FindInVertexIdCounterOrСreate(stop, &bus);
-					if (stop_counter == bus.stops.size()) {
-						if (!bus.is_circular)
-						{//создание ребра промежуточных остановок	
-						//прямое направление
-							edge.from = waiting_second_st;
-							edge.to = travel_second_st;
-							edge.weight = routing_settings_.bus_wait_time;
-							graph_.AddEdge(edge);
-							//обратное направление
-							edge.from = travel_second_st;
-							edge.to = waiting_second_st;
-							edge.weight = 0;
-							graph_.AddEdge(edge);
-						}
-					}
-					else {//создание ребра промежуточных остановок	
-						//прямое направление
-						edge.from = waiting_second_st;
-						edge.to = travel_second_st;
-						edge.weight = routing_settings_.bus_wait_time;
-						graph_.AddEdge(edge);
-						//обратное направление
-						edge.from = travel_second_st;
-						edge.to = waiting_second_st;
-						edge.weight = 0;
-						graph_.AddEdge(edge);
-					}
-				}
-				last_step = stop;
-			}
-
-			//создание ребер между остановками
-			if (bus.is_circular) {
-				AddEdgeForCircularBus(bus);
-			}
-			else {
-				AddEdgeForNotCircularBus(bus);
-			}
-
-		}
-
-		graph_.SetComplete();
-	}
-
-	Catalogue::Graph& Catalogue::GetGraph() {
-		return graph_;
-	}
-
-	std::optional <std::pair<detail::VertexIdType, detail::VertexIdType>> Catalogue::Get_range_vertexId(const std::string& from, const std::string& to) {
-		if (name_of_stop_.count(from) && name_of_stop_.count(to)) {
-			if (Stop_and_vertexId_.count(name_of_stop_.at(from)) && Stop_and_vertexId_.count(name_of_stop_.at(to))) {
-				detail::VertexIdType& vertID_from = Stop_and_vertexId_.at(name_of_stop_.at(from));
-				detail::VertexIdType& vertID_to = Stop_and_vertexId_.at(name_of_stop_.at(to));
-				return std::pair<detail::VertexIdType, detail::VertexIdType>{vertID_from, vertID_to};
-			}
-		}
-		return {};
-	}
-
-	detail::VertexIdInfo Catalogue::Get_Stop_Info_By_VertexId(graph::VertexId verdex_id) {
-		return vertexId_info.at(verdex_id);
+	size_t Catalogue::GetNumberOfStops() const {
+		return stops_.size();
 	}

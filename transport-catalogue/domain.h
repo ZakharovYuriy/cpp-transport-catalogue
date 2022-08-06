@@ -21,26 +21,6 @@
 
 namespace transport {
 	namespace detail {
-		struct RoutingSettings {
-			int bus_wait_time = 0;
-			double bus_velocity = 0.0;
-		};
-
-		struct VertexIdType {
-			graph::VertexId waiting;
-			graph::VertexId travel;
-		};
-
-		enum VertexType {
-			Waiting,
-			Travel
-		};		
-
-		struct EdgeInfo {
-			int stations_passed = 0;
-			std::string_view bus_name;
-		};
-
 		struct Stop {
 			Stop() = default;
 			Stop(const std::string&& name, const ::geo::Coordinates& coord) :name_of_stop{ name }, coordinat{ coord }{
@@ -49,17 +29,6 @@ namespace transport {
 			}
 			std::string name_of_stop = "";
 			::geo::Coordinates coordinat = { 0,0 };
-		};
-
-		struct VertexIdInfo {
-			VertexType vertex_type;
-			Stop* stop_pointer;
-			std::string_view bus_name;
-		};
-
-		struct EdgeRange {
-			int from;
-			int to;
 		};
 
 		struct Bus {
@@ -110,7 +79,43 @@ namespace transport {
 
 		private:
 			std::hash<const void*>d_hasher_;
-		};	
+		};
+
+		struct Distance {
+			double map_distance = 0;
+			int real_distance = 0;
+		};
+
+		struct RoutingSettings {
+			int bus_wait_time = 0;
+			double bus_velocity = 0.0;
+		};
+
+		struct VertexRange {
+			graph::VertexId waiting;
+			graph::VertexId travel;
+		};
+
+		enum VertexType {
+			Waiting,
+			Travel
+		};
+
+		struct VertexIdInfo {
+			VertexType vertex_type;
+			Stop* stop_pointer;
+			std::string_view bus_name;
+		};
+
+		struct EdgeRange {
+			VertexRange from;
+			VertexRange to;
+		};
+
+		struct EdgeInfo {
+			int stations_passed = 0;
+			std::string_view bus_name;
+		};
 	}
 
 	namespace json {
@@ -130,6 +135,11 @@ namespace transport {
 				}
 				std::string from = "";
 				std::string to = "";
+			};
+
+			struct RoutingSettings {
+				int bus_wait_time = 0;
+				double bus_velocity = 0.0;
 			};
 
 			struct Request {
