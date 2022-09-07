@@ -15,7 +15,8 @@ namespace transport {
 	public:
 		GraphBuilder() = default;
 		GraphBuilder(const Catalogue& catalogue, int bus_wait_time,
-			double bus_velocity) :routing_settings_({ bus_wait_time, bus_velocity }), catalogue_(catalogue) {	
+			double bus_velocity) :routing_settings_({ bus_wait_time, bus_velocity }), catalogue_(catalogue) {
+			router_ = graph::Router<double>();
 			BuildGraph();
 		};
 
@@ -29,15 +30,41 @@ namespace transport {
 		std::optional <detail::EdgeRange> Get_range_vertexId(const std::string& from, const std::string& to);
 		detail::VertexIdInfo Get_Stop_Info_By_VertexId(graph::VertexId);
 
+		void SetRouter(const graph::Router<double>& router) {
+			router_ = router;
+		}
+
+		Graph* BuildGraph(const Catalogue& catalogue, detail::RoutingSettings settings) {
+			CleareAll();
+			catalogue_ = catalogue;
+			SetRoutingSettings(settings);
+			BuildGraph();
+			return &graph_;
+		}
+
+		graph::Router<double>&  GetRouter() {
+			return router_;
+		}
+
 	private:
 		std::unordered_map<::transport::detail::Stop*, detail::VertexRange> Stop_and_vertexId_;
 		std::unordered_map < graph::VertexId, detail::VertexIdInfo> vertexId_info;
 		std::map < std::pair<int, int>, detail::EdgeInfo> edge_range_info;
 
 		Graph graph_;
+		graph::Router<double> router_;//
+
 		size_t vertex_counter_ = 0;
-		detail::RoutingSettings routing_settings_;
+		detail::RoutingSettings routing_settings_;//
 		Catalogue catalogue_;
+
+		void CleareAll() {
+			Stop_and_vertexId_.clear();
+			vertexId_info.clear();
+			edge_range_info.clear();
+			vertex_counter_ = 0;
+			routing_settings_ = {0,0};
+		}
 
 		Graph& BuildGraph();
 		detail::VertexRange FindInVertexIdCounterOr—reate(::transport::detail::Stop* stop, ::transport::detail::Bus* bus);

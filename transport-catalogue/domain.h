@@ -140,6 +140,7 @@ namespace transport {
 			struct RoutingSettings {
 				int bus_wait_time = 0;
 				double bus_velocity = 0.0;
+				bool has_set = false;
 			};
 
 			struct Request {
@@ -172,7 +173,7 @@ namespace transport {
 				Settings() = default;
 
 				double width = 0;
-				double height = 0;
+				double hight = 0;
 				double padding = 0;
 				double line_width = 0;
 				double stop_radius = 0;
@@ -182,7 +183,7 @@ namespace transport {
 				std::array <double, 2>  stop_label_offset = { 0,0 };
 				std::string underlayer_color = "none";
 				double underlayer_width = 0;
-				std::vector<std::string> color_palette={};
+				std::vector<std::string> color_palette = {};
 			};
 
 			struct PathSettings {

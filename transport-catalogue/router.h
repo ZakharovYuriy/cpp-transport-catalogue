@@ -12,106 +12,166 @@
 #include <utility>
 #include <vector>
 
+
+#include <iostream>
+
 namespace graph {
-
-template <typename Weight>
-class Router {
-private:
-    using Graph = DirectedWeightedGraph<Weight>;
-
-public:
-    explicit Router(const Graph& graph);
-
-    struct RouteInfo {
-        Weight weight;
-        std::vector<EdgeId> edges;
+    struct SimpleInternalData {
+        double weight;
+        std::optional <EdgeId> prev_edge;
     };
 
-    std::optional<RouteInfo> BuildRoute(VertexId from, VertexId to) const;
+    template <typename Weight>
+    class Router {
+    private:
+        using Graph = DirectedWeightedGraph<Weight>;
+        struct RouteInternalData {
+            Weight weight;
+            std::optional<EdgeId> prev_edge;
+        };
+        using RoutesInternalData = std::vector<std::vector<std::optional<RouteInternalData>>>;
+        
+    public:
+        Router();
+        explicit Router(Graph* graph, const std::vector < std::vector <std::optional<graph::SimpleInternalData>>>& routes_internal_data);
+        explicit Router(Graph* graph);
+        Router(const Router& router) = default;
 
-private:
-    struct RouteInternalData {
-        Weight weight;
-        std::optional<EdgeId> prev_edge;
-    };
-    using RoutesInternalData = std::vector<std::vector<std::optional<RouteInternalData>>>;
+        struct RouteInfo {
+            Weight weight;
+            std::vector<EdgeId> edges;
+        };
 
-    void InitializeRoutesInternalData(const Graph& graph) {
-        const size_t vertex_count = graph.GetVertexCount();
-        for (VertexId vertex = 0; vertex < vertex_count; ++vertex) {
-            routes_internal_data_[vertex][vertex] = RouteInternalData{ZERO_WEIGHT, std::nullopt};
-            for (const EdgeId edge_id : graph.GetIncidentEdges(vertex)) {
-                const auto& edge = graph.GetEdge(edge_id);
-                if (edge.weight < ZERO_WEIGHT) {
-                    throw std::domain_error("Edges' weights should be non-negative");
+        std::optional<RouteInfo> BuildRoute(VertexId from, VertexId to) const;
+
+        Router<Weight>& operator=(const Router<Weight>& rhs) {
+            graph_ = rhs.graph_;
+            routes_internal_data_ = rhs.routes_internal_data_;
+            /*
+            InitializeRoutesInternalData(graph_);
+
+            if (graph_ != nullptr) {
+                const size_t vertex_count = graph_->GetVertexCount();
+                for (VertexId vertex_through = 0; vertex_through < vertex_count; ++vertex_through) {
+                    RelaxRoutesInternalDataThroughVertex(vertex_count, vertex_through);
                 }
-                auto& route_internal_data = routes_internal_data_[vertex][edge.to];
-                if (!route_internal_data || route_internal_data->weight > edge.weight) {
-                    route_internal_data = RouteInternalData{edge.weight, edge_id};
-                }
-            }
+            }*/
+            return *this;
         }
-    }
 
-    void RelaxRoute(VertexId vertex_from, VertexId vertex_to, const RouteInternalData& route_from,
-                    const RouteInternalData& route_to) {
-        auto& route_relaxing = routes_internal_data_[vertex_from][vertex_to];
-        const Weight candidate_weight = route_from.weight + route_to.weight;
-        if (!route_relaxing || candidate_weight < route_relaxing->weight) {
-            route_relaxing = {candidate_weight,
-                              route_to.prev_edge ? route_to.prev_edge : route_from.prev_edge};
+        RoutesInternalData GetRoutesInternalData() {
+            return routes_internal_data_;
         }
-    }
 
-    void RelaxRoutesInternalDataThroughVertex(size_t vertex_count, VertexId vertex_through) {
-        for (VertexId vertex_from = 0; vertex_from < vertex_count; ++vertex_from) {
-            if (const auto& route_from = routes_internal_data_[vertex_from][vertex_through]) {
-                for (VertexId vertex_to = 0; vertex_to < vertex_count; ++vertex_to) {
-                    if (const auto& route_to = routes_internal_data_[vertex_through][vertex_to]) {
-                        RelaxRoute(vertex_from, vertex_to, *route_from, *route_to);
+    private:  
+        void InitializeRoutesInternalData(Graph* graph) {
+            if (graph != nullptr) {
+                const size_t vertex_count = graph->GetVertexCount();
+                for (VertexId vertex = 0; vertex < vertex_count; ++vertex) {
+                    routes_internal_data_[vertex][vertex] = RouteInternalData{ ZERO_WEIGHT, std::nullopt };
+                    for (const EdgeId edge_id : graph->GetIncidentEdges(vertex)) {
+                        const auto& edge = graph->GetEdge(edge_id);
+                        if (edge.weight < ZERO_WEIGHT) {
+                            throw std::domain_error("Edges' weights should be non-negative");
+                        }
+                        auto& route_internal_data = routes_internal_data_[vertex][edge.to];
+                        if (!route_internal_data || route_internal_data->weight > edge.weight) {
+                            route_internal_data = RouteInternalData{ edge.weight, edge_id };
+                        }
                     }
                 }
             }
         }
-    }
 
-    static constexpr Weight ZERO_WEIGHT{};
-    const Graph& graph_;
-    RoutesInternalData routes_internal_data_;
-};
+        void RelaxRoute(VertexId vertex_from, VertexId vertex_to, const RouteInternalData& route_from,
+            const RouteInternalData& route_to) {
+            auto& route_relaxing = routes_internal_data_[vertex_from][vertex_to];
+            const Weight candidate_weight = route_from.weight + route_to.weight;
+            if (!route_relaxing || candidate_weight < route_relaxing->weight) {
+                route_relaxing = { candidate_weight,
+                                  route_to.prev_edge ? route_to.prev_edge : route_from.prev_edge };
+            }
+        }
 
-template <typename Weight>
-Router<Weight>::Router(const Graph& graph)
-    : graph_(graph)
-    , routes_internal_data_(graph.GetVertexCount(),
-                            std::vector<std::optional<RouteInternalData>>(graph.GetVertexCount()))
-{
-    InitializeRoutesInternalData(graph);
+        void RelaxRoutesInternalDataThroughVertex(size_t vertex_count, VertexId vertex_through) {
+            for (VertexId vertex_from = 0; vertex_from < vertex_count; ++vertex_from) {
+                if (const auto& route_from = routes_internal_data_[vertex_from][vertex_through]) {
+                    for (VertexId vertex_to = 0; vertex_to < vertex_count; ++vertex_to) {
+                        if (const auto& route_to = routes_internal_data_[vertex_through][vertex_to]) {
+                            RelaxRoute(vertex_from, vertex_to, *route_from, *route_to);
+                        }
+                    }
+                }
+            }
+        }
 
-    const size_t vertex_count = graph.GetVertexCount();
-    for (VertexId vertex_through = 0; vertex_through < vertex_count; ++vertex_through) {
-        RelaxRoutesInternalDataThroughVertex(vertex_count, vertex_through);
-    }
-}
+        static constexpr Weight ZERO_WEIGHT{};
+        Graph* graph_;
+        RoutesInternalData routes_internal_data_;
+    };
 
-template <typename Weight>
-std::optional<typename Router<Weight>::RouteInfo> Router<Weight>::BuildRoute(VertexId from,
-                                                                             VertexId to) const {
-    const auto& route_internal_data = routes_internal_data_.at(from).at(to);
-    if (!route_internal_data) {
-        return std::nullopt;
-    }
-    const Weight weight = route_internal_data->weight;
-    std::vector<EdgeId> edges;
-    for (std::optional<EdgeId> edge_id = route_internal_data->prev_edge;
-         edge_id;
-         edge_id = routes_internal_data_[from][graph_.GetEdge(*edge_id).from]->prev_edge)
+    template <typename Weight>
+    Router<Weight>::Router()
+        //: routes_internal_data_(0, std::vector<std::optional<RouteInternalData>>(0))
     {
-        edges.push_back(*edge_id);
+        routes_internal_data_.clear();
+        graph_ = nullptr;
     }
-    std::reverse(edges.begin(), edges.end());
 
-    return RouteInfo{weight, std::move(edges)};
-}
+    template <typename Weight>
+    Router<Weight>::Router(Graph* graph, const std::vector < std::vector <std::optional<graph::SimpleInternalData>>>& routes_internal_data) {
+        graph_ = graph;
+        routes_internal_data_.clear();
+        for (const auto& ser_routes_internal_data : routes_internal_data) {
+            std::vector <std::optional<RouteInternalData>> buff;
+            for (const auto& ser_internal_data : ser_routes_internal_data) {
+                RouteInternalData data;
+                if (ser_internal_data.has_value()) {                
+                    data.weight = ser_internal_data.value().weight;
+                    if (ser_internal_data.value().prev_edge.has_value()) {
+                        data.prev_edge = ser_internal_data.value().prev_edge.value();
+                    }
+                }
+                buff.push_back(data);
+            }
+            routes_internal_data_.push_back(buff);
+        }
+    }
+
+    template <typename Weight>
+    Router<Weight>::Router(Graph* graph)
+        : routes_internal_data_(graph->GetVertexCount(),
+            std::vector<std::optional<RouteInternalData>>(graph->GetVertexCount()))
+    {
+        graph_ = graph;
+        InitializeRoutesInternalData(graph);
+
+        const size_t vertex_count = graph->GetVertexCount();
+        for (VertexId vertex_through = 0; vertex_through < vertex_count; ++vertex_through) {
+            RelaxRoutesInternalDataThroughVertex(vertex_count, vertex_through);
+        }
+    }
+
+    template <typename Weight>
+    std::optional<typename Router<Weight>::RouteInfo> Router<Weight>::BuildRoute(VertexId from,
+        VertexId to) const {
+        const auto& route_internal_data = routes_internal_data_.at(from).at(to);
+        if (!route_internal_data) {
+            return std::nullopt;
+        }
+        const Weight weight = route_internal_data->weight;
+        std::vector<EdgeId> edges;
+        for (std::optional<EdgeId> edge_id = route_internal_data->prev_edge;
+            edge_id;
+            edge_id = routes_internal_data_[from][graph_->GetEdge(*edge_id).from]->prev_edge)
+        {
+            edges.push_back(*edge_id);
+        }
+        std::reverse(edges.begin(), edges.end());
+
+        return RouteInfo{ weight, std::move(edges) };
+    }
 
 }  // namespace graph
+
+

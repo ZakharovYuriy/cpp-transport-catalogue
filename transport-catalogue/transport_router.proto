@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package router_serialize;
+
+message RoutingSettings {
+	int64 bus_wait_time = 1;
+	double bus_velocity = 2;
+}
+
+message InternalData{
+	double weight = 1;
+		int64 prev_edge = 2;
+		bool has_data = 3;
+
+}
+
+message OptionalInternalData{
+	oneof optional_optional_internal_data{
+		InternalData optional_internal_data = 1;
+	}
+}
+
+message RoutesInternalData{
+	repeated OptionalInternalData internal_data = 1;
+}
+
+message BuildGraph {
+	RoutingSettings routing_settings = 1;
+	repeated RoutesInternalData router_internal_data = 2;	
+}
+

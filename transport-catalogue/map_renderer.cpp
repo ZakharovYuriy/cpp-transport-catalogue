@@ -84,7 +84,7 @@ namespace transport {
         void MapRender::DrowMap(Catalogue& catalogue, ::svg::ObjectContainer& target) {
             list_of_busses_ = catalogue.GetOrderedListOfBuses();
             const auto& stop_coordinates = catalogue.GetStopsCoordinatesFromListOfBuses();
-            SphereProjector project(stop_coordinates.begin(), stop_coordinates.end(), global_settings_.width, global_settings_.height, global_settings_.padding);
+            SphereProjector project(stop_coordinates.begin(), stop_coordinates.end(), global_settings_.width, global_settings_.hight, global_settings_.padding);
             long unsigned int bus_number_in_array = 0;
             for (const auto& bus : list_of_busses_) {
                 if (bus->stops.empty()) {

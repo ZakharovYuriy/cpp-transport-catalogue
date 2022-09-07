@@ -24,7 +24,8 @@ private:
     using IncidentEdgesRange = ranges::Range<typename IncidenceList::const_iterator>;
 
 public:
-    DirectedWeightedGraph() = default;
+    DirectedWeightedGraph() :edges_({}), incidence_lists_({}) {
+    }
     explicit DirectedWeightedGraph(size_t vertex_count);
     EdgeId AddEdge(const Edge<Weight>& edge);
 

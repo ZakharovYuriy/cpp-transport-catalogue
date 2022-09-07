@@ -19,12 +19,12 @@ void Catalogue::SetDistancesToStop(const std::string_view current_name, const st
 	if (!real_distances.empty()) {
 		for (const auto& [name, length] : real_distances) {
 			if (name_of_stop_.count(name) != 0) {
-				lengths[{name_of_stop_.at(current_name), name_of_stop_.at(name)}] = length;
+				lengths_[{name_of_stop_.at(current_name), name_of_stop_.at(name)}] = length;
 			}
 			else {
 				stops_.push_back(::transport::detail::Stop(std::move(static_cast<std::string>(name))));
 				name_of_stop_[stops_.back().name_of_stop] = &stops_.back();
-				lengths[{ name_of_stop_.at(current_name), & stops_.back()}] = length;
+				lengths_[{ name_of_stop_.at(current_name), & stops_.back()}] = length;
 			}
 		}
 	}
@@ -79,11 +79,11 @@ void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& co
 				continue;
 			}
 
-			if (lengths.count({ last_step,stop }) != 0) {
-				distance.real_distance += lengths.at({ last_step,stop });
+			if (lengths_.count({ last_step,stop }) != 0) {
+				distance.real_distance += lengths_.at({ last_step,stop });
 			}
 			else {
-				distance.real_distance += lengths.at({ stop,last_step });
+				distance.real_distance += lengths_.at({ stop,last_step });
 			}
 			distance.map_distance += ComputeDistance(last_step->coordinat, stop->coordinat);
 			last_step = stop;
@@ -99,11 +99,11 @@ void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& co
 					continue;
 				}
 
-				if (lengths.count({ last_step_reverse,bus.stops[iter] }) != 0) {
-					distance.real_distance += lengths.at({ last_step_reverse,bus.stops[iter] });
+				if (lengths_.count({ last_step_reverse,bus.stops[iter] }) != 0) {
+					distance.real_distance += lengths_.at({ last_step_reverse,bus.stops[iter] });
 				}
 				else {
-					distance.real_distance += lengths.at({ bus.stops[iter],last_step_reverse });
+					distance.real_distance += lengths_.at({ bus.stops[iter],last_step_reverse });
 				}
 
 				distance.map_distance += ComputeDistance(last_step_reverse->coordinat, bus.stops[iter]->coordinat);
@@ -185,9 +185,33 @@ void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& co
 
 	const std::unordered_map < std::pair<::transport::detail::Stop*, ::transport::detail::Stop*>,
 		int, ::transport::detail::StopHasher >& Catalogue::GetLengthsMap() const {
-		return lengths;
+		return lengths_;
 	}
 
 	size_t Catalogue::GetNumberOfStops() const {
 		return stops_.size();
 	}
+
+	std::deque<::transport::detail::Stop> Catalogue::GetStops() const {
+		return stops_;
+	}
+
+	std::deque<::transport::detail::Bus> Catalogue::GetBusses() const {
+		return busses_;
+	} 
+
+	std::unordered_map < std::pair<::transport::detail::Stop*, ::transport::detail::Stop*>, int, ::transport::detail::StopHasher > Catalogue::GetLengths() const {
+		return lengths_;
+	}
+/*
+	void Catalogue::SetStops(std::deque<::transport::detail::Stop> stops) {
+		stops_ = stops;
+	}
+
+	void Catalogue::SetBusses(std::deque<::transport::detail::Bus> busses) {
+		busses_ = busses;
+	}
+
+	void Catalogue::SetLengths(std::unordered_map < std::pair<::transport::detail::Stop*, ::transport::detail::Stop*>, int, ::transport::detail::StopHasher > lengths) {
+		lengths_ = lengths;
+	}*/

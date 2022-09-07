@@ -1,7 +1,8 @@
-#include "log_duration.h"
+//#include "log_duration.h"
 
 #include <iostream>
 #include <optional>
+#include <filesystem>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -32,7 +33,10 @@ namespace transport {
 				render_settings_ = ReadRenderSettings(dict.at("render_settings"s));
 			}
 			if (dict.count("routing_settings"s)) {
-				ReadRoutingSettings(dict.at("routing_settings"s));
+				ReadRoutingSettings(dict.at("routing_settings"s), catalogue);
+			}
+			if (dict.count("serialization_settings"s)) {
+				ReadSerializationSettings(dict.at("serialization_settings"s));
 			}
 		}
 
@@ -40,8 +44,20 @@ namespace transport {
 			::json::Print(GetOutputDoc(catalogue), output);
 		}
 
-		::transport::svg::detail::Settings& Reader::GetRenderSettings() {
+		::transport::svg::detail::Settings& Reader::RenderSettings() {
 			return render_settings_;
+		}
+
+		std::filesystem::path Reader::GetSerializePath() {
+			return serialize_path_;
+		}
+
+		GraphBuilder  Reader::GetGraphBuilder() const {
+			return builded_graph_;
+		}
+
+		GraphBuilder&  Reader::GetForChangeGraphBuilder() {
+			return builded_graph_;
 		}
 
 		void Reader::StopRequest(const ::json::Dict& map_stop_or_bus, Catalogue& catalogue) {
@@ -89,16 +105,34 @@ namespace transport {
 						BusRequest(map_stop_or_bus, catalogue);
 					}
 				}
-
+				if (routing_settings_.has_set) {
+					if (!builded_graph_.GetGraph().IsComplete()) {
+						builded_graph_ = GraphBuilder(catalogue, routing_settings_.bus_wait_time, routing_settings_.bus_velocity);
+						builded_graph_.SetRouter(graph::Router<double>(&builded_graph_.GetGraph()));
+					}				
+				}
 			}
 		}
 
-		void Reader::ReadRoutingSettings(::json::Node& settings) {
+		void Reader::ReadRoutingSettings(::json::Node& settings, Catalogue& catalogue) {
 			using namespace std::string_literals;
 			if (!settings.AsDict().empty()) {
 				const auto& map_settings = settings.AsDict();
 				routing_settings_.bus_velocity = map_settings.at("bus_velocity"s).AsDouble();
 				routing_settings_.bus_wait_time = map_settings.at("bus_wait_time"s).AsInt();
+				routing_settings_.has_set = true;
+				if (!builded_graph_.GetGraph().IsComplete()) {
+					builded_graph_ = GraphBuilder(catalogue, routing_settings_.bus_wait_time, routing_settings_.bus_velocity);
+					builded_graph_.SetRouter(graph::Router<double>(&builded_graph_.GetGraph()));
+				}
+			}
+		}
+
+		void Reader::ReadSerializationSettings(::json::Node& settings) {
+			using namespace std::string_literals;
+			if (!settings.AsDict().empty()) {
+				const auto& serialization_settings = settings.AsDict();
+				serialize_path_ = std::filesystem::path(serialization_settings.at("file"s).AsString());
 			}
 		}
 
@@ -227,19 +261,14 @@ namespace transport {
 				}
 			}
 
-
 			builder.EndArray();
 			return builder.Build();
 		}
 
-		::json::Node Reader::ReadRoutInfo(const json::detail::Request& request, Catalogue& catalogue) {
+		::json::Node Reader::ReadRoutInfo(const json::detail::Request& request) {
 			using namespace std::string_literals;
 			auto builder = ::json::Builder{};
 			builder.StartDict();
-			if (!builded_graph_.GetGraph().IsComplete()) {
-				builded_graph_ = GraphBuilder(catalogue, routing_settings_.bus_wait_time, routing_settings_.bus_velocity);
-			}
-			static graph::Router<double> router(builded_graph_.GetGraph());
 
 			if (builded_graph_.Get_range_vertexId(request.route_range.value().from,
 				request.route_range.value().to).has_value()) {
@@ -247,7 +276,7 @@ namespace transport {
 				auto [vertID_from, vertID_to] = builded_graph_.Get_range_vertexId(request.route_range.value().from,
 					request.route_range.value().to).value();
 
-				auto rout = router.BuildRoute(vertID_from.waiting, vertID_to.waiting);
+				auto rout = builded_graph_.GetRouter().BuildRoute(vertID_from.waiting, vertID_to.waiting);
 
 				if (rout.has_value()) {
 					builder.Key("request_id"s).Value(request.id)
@@ -284,7 +313,7 @@ namespace transport {
 					builder.Value(ReadMapInfo(request, catalogue));
 				}
 				else if (request.type == ::transport::json::detail::RequestType::Route) {
-					builder.Value(ReadRoutInfo(request, catalogue));
+					builder.Value(ReadRoutInfo(request));
 				}
 			}
 			builder.EndArray();
@@ -330,7 +359,7 @@ namespace transport {
 				::transport::svg::detail::Settings settings;
 
 				settings.width = dict.at("width"s).AsDouble();
-				settings.height = dict.at("height"s).AsDouble();
+				settings.hight = dict.at("height"s).AsDouble();
 
 				settings.padding = dict.at("padding"s).AsDouble();
 

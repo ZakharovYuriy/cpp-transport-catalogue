@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package transport_catalogue_serialize;
+
+import "svg.proto";
+import "transport_router.proto";
+
+message Coordinat {
+    double lat = 1;
+	double lng = 2;
+} 
+
+message Length {
+    bytes stop_from = 1;
+	bytes stop_to = 2;
+	int64 length = 3;
+} 
+
+message Stop {
+    bytes name_of_stop = 1;
+	Coordinat coordinat = 2;
+}
+
+message Bus {
+    bytes bus_number = 1;
+	bool is_circular = 2;
+	repeated bytes stops_in_bus = 3;
+} 
+
+message Catalog {
+	repeated Stop stops_list = 1;
+	repeated Bus busses_list = 2;
+	repeated Length lengths_list = 3;
+} 
+
+message Data {
+	Catalog catalog_settings = 1;
+	svg_serialize.RenderSettings svg_settings = 2;
+	router_serialize.BuildGraph builded_router = 3;
+} 

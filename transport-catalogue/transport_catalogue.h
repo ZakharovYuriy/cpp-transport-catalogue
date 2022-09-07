@@ -16,7 +16,6 @@
 #include "domain.h"
 
 
-
 namespace transport {
 	class Catalogue {
 	public:
@@ -37,6 +36,14 @@ namespace transport {
 			int, ::transport::detail::StopHasher >& GetLengthsMap() const;
 		size_t GetNumberOfStops() const;
 
+		std::deque<::transport::detail::Stop> GetStops() const;
+		std::deque<::transport::detail::Bus> GetBusses() const;
+		std::unordered_map < std::pair<::transport::detail::Stop*, ::transport::detail::Stop*>, int, ::transport::detail::StopHasher > GetLengths() const;
+
+		//void SetStops(std::deque<::transport::detail::Stop> stops);
+		//void SetBusses(std::deque<::transport::detail::Bus> busses);
+		//void SetLengths(std::unordered_map < std::pair<::transport::detail::Stop*, ::transport::detail::Stop*>, int, ::transport::detail::StopHasher > lengths);
+
 	private:		
 		detail::Distance ComputeRealAndMapDistance(const ::transport::detail::Bus& bus) const;
 		std::deque<::transport::detail::Stop> stops_;
@@ -44,7 +51,7 @@ namespace transport {
 		std::unordered_map<std::string_view, ::transport::detail::Stop*> name_of_stop_;
 		std::unordered_map<std::string_view, ::transport::detail::Bus*> name_of_bus_;
 		std::unordered_map<std::string_view, std::unordered_set<std::string_view>> stop_and_busses;
-		std::unordered_map < std::pair<::transport::detail::Stop*, ::transport::detail::Stop*>, int, ::transport::detail::StopHasher > lengths;			
+		std::unordered_map < std::pair<::transport::detail::Stop*, ::transport::detail::Stop*>, int, ::transport::detail::StopHasher > lengths_;			
 	};
 
 }

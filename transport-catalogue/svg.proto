@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package svg_serialize;
+
+message RenderSettings {
+    double width = 1;
+	double hight = 2;
+	double padding = 3;
+	double line_width = 4;
+	double stop_radius = 5;
+	int64  bus_label_font_size = 6;
+	double bus_label_offset_x = 7;
+	double bus_label_offset_y = 8;
+	int64 stop_label_font_size = 9;
+	double stop_label_offset_x = 10;
+	double stop_label_offset_y = 11;
+	string underlayer_color = 12;
+	double underlayer_width = 13;
+	repeated string color_palette = 14;
+}
