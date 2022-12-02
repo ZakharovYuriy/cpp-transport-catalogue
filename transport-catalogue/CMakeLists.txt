@@ -18,7 +18,7 @@ string(REPLACE "protobuf.lib" "protobufd.lib" "Protobuf_LIBRARY_DEBUG" "${Protob
 #string(REPLACE "protobuf.a" "protobufd.a" "Protobuf_LIBRARY_DEBUG" "${Protobuf_LIBRARY_DEBUG}")
 
 # Также find_package определила Protobuf_LIBRARY.
-# Protobuf зависит от библиотеки Threads. Добавим и её при компоновке.
+# Protobuf зависит от библиотеки Threads.
 target_link_libraries(transport_catalogue ${Protobuf_LIBRARY} Threads::Threads)
 
 #target_link_libraries(transport_catalogue "$<IF:$<CONFIG:Debug>,${Protobuf_LIBRARY_DEBUG},${Protobuf_LIBRARY}>" Threads::Threads)
