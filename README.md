@@ -1,26 +1,25 @@
 # cpp-transport-catalogue
-Финальный проект: транспортный справочник
 
-Читать на других языках: [English](README.md), [Русский](README.Russian.md)
+Read in other languages: [English](README.md), [Русский](README.RUS.md)
 
-# Описание программы
-Транспортный справочник - поддерживает графический вывод, поиск маршрутов и вычисление времени поездки.<br> 
-Сначала на вход подаются запросы на создание базы данных, затем — запросы к самой базе. <br>
+# Program Description
+Transport Directory - supports graphical output, route search and calculation of travel time.<br>
+First, requests to create a database are submitted for input, then requests to the database itself. <br>
 
-При создании базы данных командой `-make_base` результат построения **сериализуется** и сохраняется в файл, указанный в параметре `serialization_settings`.<br>
-Затем при вызове команды `-process_requests` из фала, указанного в параметре `serialization_settings` производится **десериализация** созданной базы и выполняются запросы.<br>
+When creating a database with the `-make_base` command, the result of building ** is serialized** and saved to the file specified in the `serialization_settings` parameter.<br>
+Then, when the `-process_requests` command is called from the file specified in the `serialization_settings` parameter, the **deserialization** of the created database is performed and queries are executed.<br>
 
-При помощи запросов, можно узнать: <br>
- - какие автобусные маршруты проходят через остановку<br>
- - какие остановки есть на автобусном маршруте<br>
- - узнать кратчайший по времени маршрут между двумя остановками<br>
-   На маршруте человек может использовать несколько автобусов. <br>
-   Один автобус даже можно использовать несколько раз, если на некоторых участках он делает большой крюк и проще срезать на другом автобусе.<br>
+Using queries, you can find out: <br>
+- which bus routes pass through the stop<br>
+- what stops are there on the bus route<br>
+- find out the shortest route between two stops<br>
+A person can use several buses on the route. <br>
+One bus can even be used several times if it makes a big detour in some sections and it is easier to cut off on another bus.<br>
 
-# Сборка при помощи Cmake
+# Assembly using Cmake
 To build this project on linux you need:<br>
 1)If you don't have Cmake installed, install Cmake<br>
-2)For the application to work, you need to install **Protobuf**, here is the [instruction](Instruction.Protobuf.RUS.md)<br>
+2)For the application to work, you need to install **Protobuf**, here is the [instruction](Instruction.Protobuf.EN.md) || [инструкция](Instruction.Protobuf.RUS.md)<br>
 2)If the "Debug" or "Release" folders are not created:<br>
 
 ```
@@ -49,86 +48,84 @@ cmake --build .
 ./transport_catalogue
 ```
 
-# Использование
+# Using
 
-### Перед тем как начать:
-  0. Установка и настройкка всех требуемых компонентов в среде разработки длля запуска приложения
-  1. Вариант использования показан в main.cpp и при вызове `./transport_catalogue -help`
-  2. Примеры входных документов и ответы на них есть в папке `Examples`.
+### Before you start:
+  0. Installation and configuration of all required components in the development environment to run the application
+  1. The use case is shown in main.cpp and when calling `./transport_catalogue -help`
+  2. Examples of input documents and answers to them are in the 'Examples` folder.
 
-## Описание возможностей:
-### Программа make_base
-Задача программы make_base — построить базу и сериализовать её в файл с указанным именем.<br>
+## Description of features:
+### make_base program
+The task of the make_base program is to build a database and serialize it into a file with the specified name.<br>
 
-На вход программе make_base подаётся JSON со следующими ключами:<br>
- - base_requests: запросы Bus и Stop на создание базы.<br>
- - render_settings: настройки отрисовки.<br>
- - serialization_settings: настройки сериализации.<br>
- - routing_settings — настройки маршрутизации, словарь с двумя ключами:<br>
-   bus_wait_time — время ожидания автобуса на остановке, в минутах.<br>
-   bus_velocity — скорость автобуса, в км/ч. 
+The input to the make_base program is JSON with the following keys:<br>
+ - base_requests: Bus and Stop requests to create a database.<br>
+- render_settings: rendering settings.<br>
+ - serialization_settings: serialization settings.<br>
+- routing_settings — routing settings, dictionary with two keys:<br>
+   bus_wait_time — waiting time for the bus at the stop, in minutes.<br>
+   bus_velocity — bus speed, in km/h.<br>
 
-### Программа process_requests
-Программа process_requests должна вывести JSON с ответами на запросы.<br>	
-  
-На вход программе process_requests подаётся файл JSON со следующими ключами:<br>
- - stat_requests: запросы Bus и Stop к готовой базе.<br>
- - serialization_settings: настройки сериализации.<br>
- - Route — это запросы на построение маршрута между двумя остановками.<br>
- 	Помимо стандартных свойств id и type, они содержат ещё два:<br>
-	from — остановка, где нужно начать маршрут.<br>
-	to — остановка, где нужно закончить маршрут.<br>
-	Оба значения — названия существующих в базе остановок. Однако они, возможно, не принадлежат ни одному автобусному маршруту.<br>
+### process_requests program
+The process_requests program should output JSON with responses to requests.<br>
 
-# Системые требования:
+The process_requests program receives a JSON file with the following keys as input:<br>
+- stat_requests: Bus and Stop requests to the finished database.<br>
+- serialization_settings: serialization settings.<br>
+- Route — these are requests for building a route between two stops.<br>
+In addition to the standard id and type properties, they contain two more:<br>
+from — the stop where you need to start the route.<br>
+to — stop where you need to finish the route.<br>
+Both values are names of stops existing in the database. However, they may not belong to any bus route.<br>
+
+# System requirements:
   1. C++17(STL)
   2. GCC (MinG w64) 11.2.0  
   
-# Паны по доработке:
-1. Добавить UI
-2. Добавить возможность чтения документов из файлов
-3. Добавить поддержку JSON запросов/ответов<br>
+# Plans for completion:
+1. Add UI
+2. Replace the route search library
+3. Add the ability to offer multiple paths to choose from
 
-# Стек технологий:
-  1. Хеш-функции, **unordered_map** и **unordered_set**
-  2. Деревья
+# Technology stack:
+  1. Hash functions, **unordered_map** and **unordered_set**
+  2. Trees
   3. **namespases**
   4. JSON
-  5. Умные указатели **unique_ptr**, **shared_ptr** и **weak_ptr**
-  6. Наследование и полиморфизм, абстрактные классы, интерфейсы
-  7. Runtime-полиморфизм с std::variant, динамическое приведение типов
+  5. Smart pointers **unique_ptr**, **shared_ptr** and **weak_ptr**
+  6. Inheritance and polymorphism, abstract classes, interfaces
+  7. Runtime polymorphism with std::variant, dynamic type conversion
   8. Immediately invoked lambda expression, **std::invoke**
   9. **mutable**
- 10. Работа с путями и потоками: ввода/вывода, строковыми, для работы с файлами
- 11. Регулярноые выражения **std::regex**
+ 10. Working with paths and streams: input/output, string, for working with files
+ 11. Regular expressions **std::regex**
  12. RAII - "Resource Acquisition is Initialization”
- 13. **move**-семантика, Forwarding reference
- 14. Плотная упаковка, сериализация, десериализация, Google Protocol Buffers - Protobuf
- 15. Таблица виртуальных методов
+ 13. **move**-semantics, Forwarding reference
+ 14. Dense packaging, Serialization, deserialization, Google Protocol Buffers - Protobuf
+ 15. Table of virtual methods
 
-# Структура
-### Описание файлов программы
- - ransport_catalogue.h, transport_catalogue.cpp — класс транспортного справочника<br>
- - main.cpp — точка входа.<br>
-При работе были использованы две библиотеки:<br>
- - graph.h — класс, реализующий взвешенный ориентированный граф<br>
- - router.h — класс, реализующий поиск кратчайшего пути во взвешенном ориентированном графе<br>
- <br>
- - domain.cpp,domain.h - В этом файле классы/структуры, которые являются частью предметной области (domain) приложения и не зависят от транспортного справочника<br>
- - geo.cpp, geo.h - функции для работы с географическими координатами<br>
- - json.cpp,json.h - разработанная упрощенная бибилотека для работы с JSON<br>
- - json_builder.cpp, json_builder.h - необходимые классы/структуры для создания выходного фала в формате JSON<br>
- - json_reader.cpp, json_reader.h - необходимые классы/структуры для чтения и обработки входного фала в формате JSON<br>
- - log_duration.h - файл с классом, позволяющим производить **профилирование**<br>
- - map_renderer.cpp, map_renderer.h - код, отвечающий за визуализацию карты маршрутов в формате SVG.<br>
- - serialization.cpp, serialization.h - необходимые классы/структуры для обработки сериализованных фалов.<br>
- - svg.cpp,svg.h - обработки и хранения параметров изображения SVG<br>
- - transport_router.cpp, transport_router.h - построение маршрутов<br>
- - transport_catalogue.proto, transport_router.protoF, svg.proto - proto файлы, для сериализации<br>
+# Structure
+### Description of the program files
+ - transport_catalogue.h, transport_catalogue.cpp — class of the transport directory<br>
+ - main.cpp — entry point.<br>
+Two libraries were used in the work:<br>
+ - graph.h — class implementing weighted oriented graph<br>
+ - router.h — class implementing shortest path search in weighted oriented graph<br>
+- domain.cpp ,domain.h - In this file, classes/structures that are part of the application domain and do not depend on the transport directory<br>
+ - geo.cpp , geo.h - functions for working with geographical coordinates<br>
+ - json.cpp ,json.h - developed simplified library for working with JSON<br>
+ - json_builder.cpp , json_builder.h - necessary classes/structures to create an output file in JSON format<br>
+ - json_reader.cpp , json_reader.h - necessary classes/structures for reading and processing the input file in JSON format<br>
+ - log_duration.h - a file with a class that allows **profiling** <br>
+ - map_renderer.cpp , map_renderer.h - code responsible for visualizing the route map in SVG format.<br>
+ - serialization.cpp , serialization.h - necessary classes/structures for processing serialized files.<br>
+ - svg.cpp ,svg.h - processing and storing SVG image parameters<br>
+ - transport_router.cpp , transport_router.h - building routes<br>
+ - transport_catalogue.proto, transport_router.protoF, svg.proto - proto files, for serialization<br>
 
-
-#Формат входных данных
-Данные в формате JSON-объекта. Его верхнеуровневая структура:<br>
+# Input data format
+Data in JSON object format. Its top-level structure:<br>
 
 ```
 {
@@ -136,14 +133,14 @@ cmake --build .
   "stat_requests": [ ... ]
 } 
 ```
-Это словарь, содержащий ключи:<br>
-`base_requests` — массив с описанием автобусных маршрутов и остановок,<br>
-`stat_requests` — массив с запросами к транспортному справочнику.<br>
+This is a dictionary containing keys:<br>
+`base_requests` - is an array with a description of bus routes and stops,<br>
+`stat_requests` - is an array with requests to the transport directory.<br>
 
-##Описание базы маршрутов
-Массив `base_requests` содержит элементы двух типов: маршруты и остановки. Они перечисляются в произвольном порядке.<br>
+## Description of the route database
+The `base_requests` array contains two types of elements: routes and stops. They are listed in any order.<br>
 
-###Пример описания остановки:<br>
+### Example of a stop description:<br>
 
 ```
 {
@@ -157,13 +154,13 @@ cmake --build .
   }
 } 
 ```
-Описание остановки — словарь с ключами:<br>
- - type — строка, равная "Stop". Означает, что словарь описывает остановку;<br>
- - name — название остановки;<br>
- - latitude и longitude — широта и долгота остановки — числа с плавающей запятой;<br>
- - road_distances — словарь, задающий дорожное расстояние от этой остановки до соседних. Каждый ключ в этом словаре — название соседней остановки, значение — целочисленное расстояние в метрах.<br>
+Description of the stop — dictionary with keys:<br>
+- type — string equal to "Stop". Means that the dictionary describes the situation;<br>
+- name — the name of the stop;<br>
+- latitude and longitude — latitude and longitude of the stop — floating point numbers;<br>
+- road_distances — a dictionary that specifies the road distance from this stop to neighboring ones. Each key in this dictionary is the name of a nearby stop, the value is an integer distance in meters.<br>
  
-###Пример описания автобусного маршрута:
+### Example of a bus route description:
 ```
 {
   "type": "Bus",
@@ -178,29 +175,29 @@ cmake --build .
 } 
 ```
 
-Описание автобусного маршрута — словарь с ключами:<br>
- - type — строка "Bus". Означает, что словарь описывает автобусный маршрут;<br>
- - name — название маршрута;<br>
- - stops — массив с названиями остановок, через которые проходит маршрут. У кольцевого маршрута название последней остановки дублирует название первой. Например: ["stop1", "stop2", "stop3", "stop1"];<br>
- - is_roundtrip — значение типа bool. true, если маршрут кольцевой.<br>
+Description of the bus route — dictionary with keys:<br>
+- type — string "Bus". Means that the dictionary describes the bus route;<br>
+- name — the name of the route;<br>
+- stops — an array with the names of stops that the route passes through. For a circular route, the name of the last stop duplicates the name of the first one. For example: ["stop1", "stop2", "stop3", "stop1"];<br>
+- is_roundtrip — value of the bool type. true if the route is circular.<br>
 
-##Формат запросов к транспортному справочнику и ответов на них
-Запросы хранятся в массиве `stat_requests`. В ответ на них программа должна вывести в stdout JSON-массив ответов:<br>
+## Format of requests to the transport directory and responses to them
+Requests are stored in the `stat_requests` array. In response to them, the program should output a JSON array of responses to stdout:<br>
 
 ```
 [
-  { ответ на первый запрос },
-  { ответ на второй запрос },
+  { response to the first request },
+  { response to the second request },
   ...
-  { ответ на последний запрос }
+  { response to the last request }
 ] 
 ```
-Каждый запрос — словарь с обязательными ключами `id` и `type`. Они задают уникальный числовой идентификатор запроса и его тип. В словаре могут быть и другие ключи, специфичные для конкретного типа запроса.<br>
-В выходном JSON-массиве на каждый запрос `stat_requests` должен быть ответ в виде словаря с обязательным ключом `request_id`. Значение ключа должно быть равно `id` соответствующего запроса. В словаре возможны и другие ключи, специфичные для конкретного типа ответа.<br>
-Порядок следования ответов на запросы в выходном массиве должен совпадать с порядком запросов в массиве `stat_requests`.<br>
+Each query is a dictionary with the required keys `id` and `type`. They specify a unique numeric identifier of the request and its type. There may be other keys in the dictionary that are specific to a particular type of query.<br>
+In the output JSON array, each `stat_requests` request must have a dictionary response with the mandatory `request_id` key. The key value must be equal to the `id` of the corresponding request. There are other keys in the dictionary that are specific to a particular type of response.<br>
+The order of responses to requests in the output array must match the order of requests in the `stat_requests` array.<br>
 
-### Получение информации о маршруте
-Формат запроса:<br>
+### Getting route information
+Request format:<br>
 
 ```
 {
@@ -209,9 +206,9 @@ cmake --build .
   "name": "14"
 } 
 ```
-Ключ type имеет значение “Bus”. По нему можно определить, что это запрос на получение информации о маршруте.
-Ключ name задаёт название маршрута, для которого приложение должно вывести статистическую информацию.<br>
-### Ответ на этот запрос должен быть дан в виде словаря:
+The type key has the value “Bus". It can be used to determine that this is a request for route information.
+The name key specifies the name of the route for which the application should output statistical information.<br>
+### The answer to this request should be given in the form of a dictionary:
 
 ```
 {
@@ -222,15 +219,16 @@ cmake --build .
   "unique_stop_count": 3
 } 
 ```
-Ключи словаря:<br>
- - curvature — извилистость маршрута. Она равна отношению длины дорожного расстояния маршрута к длине географического расстояния. Число типа double;<br>
- - request_id — должен быть равен id соответствующего запроса Bus. Целое число;<br>
- - route_length — длина дорожного расстояния маршрута в метрах, целое число;<br>
- - stop_count — количество остановок на маршруте;<br>
- - unique_stop_count — количество уникальных остановок на маршруте.<br>
-Например, на кольцевом маршруте с остановками A, B, C, A четыре остановки. Три из них уникальные.<br>
-На некольцевом маршруте с остановками A, B и C пять остановок (A, B, C, B, A). Три из них уникальные.<br>
-Если в справочнике нет маршрута с указанным названием, ответ будет таким:<br>
+Dictionary Keys:<br>
+- curvature — the tortuosity of the route. It is equal to the ratio of the length of the road distance of the route to the length of the geographical distance. A number of type double;<br>
+- request_id — must be equal to the id of the corresponding Bus request. Integer;<br>
+- route_length — the length of the road distance of the route in meters, integer;<br>
+- stop_count — the number of stops on the route;<br>
+- unique_stop_count — the number of unique stops on the route.<br>
+For example, on a circular route with stops A, B, C, A there are four stops. Three of them are unique.<br>
+There are five stops on the ring route with stops A, B and C (A, B, C, B, A). Three of them are unique.<br>
+<br>
+If there is no route with the specified name in the directory, the answer will be as follows:<br>
 
 ```
 {
@@ -238,8 +236,8 @@ cmake --build .
   "error_message": "not found"
 } 
 ```
-### Получение информации об остановке
-Формат запроса:<br>
+### Getting information about a stop
+Request format:<br>
 
 ```
 {
@@ -248,8 +246,8 @@ cmake --build .
   "name": "Улица Докучаева"
 } 
 ```
-Ключ name задаёт название остановки.<br>
-### Ответ на запрос:
+The name key sets the name of the stop.<br>
+### Response to the request:
 
 ```
 {
@@ -260,10 +258,10 @@ cmake --build .
 } 
 ```
 
-Значение ключей ответа:
- - buses — массив названий маршрутов, которые проходят через эту остановку. Названия отсортированы в лексикографическом порядке.<br>
- - request_id — целое число, равное id соответствующего запроса Stop.<br>
-Если в справочнике нет остановки с переданным названием, ответ на запрос должен быть такой:<br>
+The value of the response keys:
+ - buses - is an array of names of routes that pass through this stop. The names are sorted in lexicographic order.<br>
+- request_id - is an integer equal to the id of the corresponding Stop request.<br>
+If there is no stop with the given name in the directory, the response to the request should be as follows:<br>
 
 ```
 {
@@ -272,7 +270,7 @@ cmake --build .
 } 
 ```
 
-## Структура словаря render_settings:
+## Structure of the render_settings dictionary:
 ```
 {
   "width": 1200.0,
@@ -299,32 +297,32 @@ cmake --build .
   ]
 } 
 ```
- - width и height — ширина и высота изображения в пикселях. Вещественное число в диапазоне от 0 до 100000.<br>
- - padding — отступ краёв карты от границ SVG-документа. Вещественное число не меньше 0 и меньше min(width, height)/2.<br>
- - line_width — толщина линий, которыми рисуются автобусные маршруты. Вещественное число в диапазоне от 0 до 100000.<br>
- - stop_radius — радиус окружностей, которыми обозначаются остановки. Вещественное число в диапазоне от 0 до 100000.<br>
- - bus_label_font_size — размер текста, которым написаны названия автобусных маршрутов. Целое число в диапазоне от 0 до 100000.<br>
- - bus_label_offset — смещение надписи с названием маршрута относительно координат конечной остановки на карте. Массив из двух элементов типа double. Задаёт значения свойств dx и dy SVG-элемента <text>. Элементы массива — числа в диапазоне от –100000 до 100000.<br>
- - stop_label_font_size — размер текста, которым отображаются названия остановок. Целое число в диапазоне от 0 до 100000.<br>
- - stop_label_offset — смещение названия остановки относительно её координат на карте. Массив из двух элементов типа double. Задаёт значения свойств dx и dy SVG-элемента <text>. Числа в диапазоне от –100000 до 100000.<br>
- - underlayer_color — цвет подложки под названиями остановок и маршрутов. Формат хранения цвета будет ниже.
-underlayer_width — толщина подложки под названиями остановок и маршрутов. Задаёт значение атрибута stroke-width элемента <text>. Вещественное число в диапазоне от 0 до 100000.<br>
- - color_palette — цветовая палитра. Непустой массив.<br>
+ - width and height — the width and height of the image in pixels. A real number in the range from 0 to 100000.<br>
+- padding — the padding of the edges of the map from the borders of the SVG document. A real number no less then 0 and less than min(width, height)/2.<br>
+- line_width — the thickness of the lines that draw bus routes. A real number in the range from 0 to 100000.<br>
+- stop_radius — radius of circles that indicate stops. A real number in the range from 0 to 100000.<br>
+ - bus_label_font_size — the size of the text used to write the names of bus routes. An integer in the range from 0 to 100000.<br>
+ - bus_label_offset — offset of the route name label relative to the coordinates of the final stop on the map. An array of two elements of the double type. Sets the values of the dx and dy properties of the <text> SVG element. Array elements are numbers in the range from -100000 to 100000.<br>
+- stop_label_font_size — the size of the text that displays the names of stops. An integer in the range from 0 to 100000.<br>
+ - stop_label_offset — offset of the name of the stop relative to its coordinates on the map. An array of two elements of the double type. Sets the values of the dx and dy properties of the <text> SVG element. Numbers in the range from -100000 to 100000.<br>
+- underlayer_color — the color of the background under the names of stops and routes. The color storage format will be below.
+underlayer_width — the thickness of the substrate under the names of stops and routes. Sets the value of the stroke-width attribute of the <text> element. A real number in the range from 0 to 100000.<br>
+- color_palette — color palette. A non-empty array.<br>
  <br>
-Цвет можно указать в одном из следующих форматов:<br>
- - в виде строки, например, "red" или "black";<br>
- - в массиве из трёх целых чисел диапазона [0, 255]. Они определяют r, g и b компоненты цвета в формате svg::Rgb. Цвет [255, 16, 12] нужно вывести в SVG как rgb(255,16,12);<br>
- - в массиве из четырёх элементов: три целых числа в диапазоне от [0, 255] и одно вещественное число в диапазоне от [0.0, 1.0]. Они задают составляющие red, green, blue и opacity цвета формата svg::Rgba. Цвет, заданный как [255, 200, 23, 0.85], должен быть выведен в SVG как rgba(255,200,23,0.85).<br>
+The color can be specified in one of the following formats:<br>
+ - in the form of a string, for example, "red" or "black";<br>
+ - in an array of three integers in the range [0, 255]. They define the r, g and b components of the color in svg::Rgb format. The color [255, 16, 12] should be output in SVG as rgb(255,16,12);<br>
+ - in an array of four elements: three integers in the range from [0, 255] and one real number in the range from [0.0, 1.0]. They set the components red, green, blue and opacity colors of the svg::Rgba format. The color specified as [255, 200, 23, 0.85], should be output in SVG as rgba(255,200,23,0.85).<br>
 
 
-###В массиве stat_requests запрос на получение изображения имеет следующий вид:
+### In the state_request array, the request to get an image has the following form:
 ```
 {
   "type": "Map",
   "id": 11111
 } 
 ```
-### Ответ на этот запрос отдаётся в виде словаря с ключами request_id и map:
+### The response to this request is given in the form of a dictionary with the keys request_id and map:
 
 ```
 {
@@ -332,5 +330,5 @@ underlayer_width — толщина подложки под названиями
   "request_id": 11111
 } 
 ```
-Ключ map — строка с изображением карты в формате SVG. 
+The map key is a string with a map image in SVG format.
 
