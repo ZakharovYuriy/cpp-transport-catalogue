@@ -18,12 +18,12 @@ namespace transport {
 
 	void GraphBuilder::TransitionBetweenIdenticalStops(graph::VertexId travel_first_st, graph::VertexId travel_second_st, graph::VertexId waiting_first_st) {
 		graph::Edge<double> edge;
-		//прямое направление
+		//РїСЂСЏРјРѕРµ РЅР°РїСЂР°РІР»РµРЅРёРµ
 		edge.from = travel_first_st;
 		edge.to = travel_second_st;
 		edge.weight = routing_settings_.bus_wait_time;
 		graph_.AddEdge(edge);
-		//обратное направление
+		//РѕР±СЂР°С‚РЅРѕРµ РЅР°РїСЂР°РІР»РµРЅРёРµ
 		edge.from = travel_second_st;
 		edge.to = waiting_first_st;
 		edge.weight = routing_settings_.bus_wait_time;
@@ -57,12 +57,12 @@ namespace transport {
 					}
 					const auto& begore_second_stop = catalogue_.GetStopMap().at(bus.stops[nomber_before_second_st]->name_of_stop);
 
-					const auto& [waiting_first_st, travel_first_st] = FindInVertexIdCounterOrСreate(first_stop, &bus);
-					const auto& [waiting_second_st, travel_second_st] = FindInVertexIdCounterOrСreate(second_stop, &bus);
+					const auto& [waiting_first_st, travel_first_st] = FindInVertexIdCounterOrCreate(first_stop, &bus);
+					const auto& [waiting_second_st, travel_second_st] = FindInVertexIdCounterOrCreate(second_stop, &bus);
 
 					StopsAndDistanceCounter(number_of_stops, distance, begore_second_stop, second_stop);
 
-					//из стоп в тревел
+					//РёР· СЃС‚РѕРї РІ С‚СЂРµРІРµР»
 					edge_range_info[{travel_first_st, waiting_second_st}].stations_passed = number_of_stops;
 					edge_range_info[{travel_first_st, waiting_second_st}].bus_name = bus.bus_number;
 					edge.from = travel_first_st;
@@ -89,12 +89,12 @@ namespace transport {
 		}
 		const auto& begore_second_stop = catalogue_.GetStopMap().at(bus.stops[nomber_begore_second_stop]->name_of_stop);
 
-		const auto& [waiting_first_st, travel_first_st] = FindInVertexIdCounterOrСreate(first_stop, &bus);
-		const auto& [waiting_second_st, travel_second_st] = FindInVertexIdCounterOrСreate(second_stop, &bus);
+		const auto& [waiting_first_st, travel_first_st] = FindInVertexIdCounterOrCreate(first_stop, &bus);
+		const auto& [waiting_second_st, travel_second_st] = FindInVertexIdCounterOrCreate(second_stop, &bus);
 
 		StopsAndDistanceCounter(number_of_stops, distance, begore_second_stop, second_stop);
 
-		//из стоп в тревел
+		//РёР· СЃС‚РѕРї РІ С‚СЂРµРІРµР»
 		edge_range_info[{travel_first_st, waiting_second_st}].stations_passed = number_of_stops;
 		edge_range_info[{travel_first_st, waiting_second_st}].bus_name = bus.bus_number;
 		edge.from = travel_first_st;
@@ -166,15 +166,15 @@ namespace transport {
 				if (first_end_stop) {
 					first_end_stop = false;
 					if (!Stop_and_vertexId_.count(last_step) != 0) {
-						const auto& [waiting_first_st, travel_first_st] = FindInVertexIdCounterOrСreate(last_step, &bus);
-						//создание ребра для первой остановки
-						//прямое направление
+						const auto& [waiting_first_st, travel_first_st] = FindInVertexIdCounterOrCreate(last_step, &bus);
+						//СЃРѕР·РґР°РЅРёРµ СЂРµР±СЂР° РґР»СЏ РїРµСЂРІРѕР№ РѕСЃС‚Р°РЅРѕРІРєРё
+						//РїСЂСЏРјРѕРµ РЅР°РїСЂР°РІР»РµРЅРёРµ
 						first_end_stop = false;
 						edge.from = waiting_first_st;
 						edge.to = travel_first_st;
 						edge.weight = routing_settings_.bus_wait_time;
 						graph_.AddEdge(edge);
-						//обратное направление
+						//РѕР±СЂР°С‚РЅРѕРµ РЅР°РїСЂР°РІР»РµРЅРёРµ
 						edge.from = travel_first_st;
 						edge.to = waiting_first_st;
 						edge.weight = 0;
@@ -183,29 +183,29 @@ namespace transport {
 				}
 
 				if (!Stop_and_vertexId_.count(stop) != 0) {
-					const auto& [waiting_second_st, travel_second_st] = FindInVertexIdCounterOrСreate(stop, &bus);
+					const auto& [waiting_second_st, travel_second_st] = FindInVertexIdCounterOrCreate(stop, &bus);
 					if (stop_counter == bus.stops.size()) {
 						if (!bus.is_circular)
-						{//создание ребра промежуточных остановок	
-						//прямое направление
+						{//СЃРѕР·РґР°РЅРёРµ СЂРµР±СЂР° РїСЂРѕРјРµР¶СѓС‚РѕС‡РЅС‹С… РѕСЃС‚Р°РЅРѕРІРѕРє
+							//РїСЂСЏРјРѕРµ РЅР°РїСЂР°РІР»РµРЅРёРµ
 							edge.from = waiting_second_st;
 							edge.to = travel_second_st;
 							edge.weight = routing_settings_.bus_wait_time;
 							graph_.AddEdge(edge);
-							//обратное направление
+							//РѕР±СЂР°С‚РЅРѕРµ РЅР°РїСЂР°РІР»РµРЅРёРµ
 							edge.from = travel_second_st;
 							edge.to = waiting_second_st;
 							edge.weight = 0;
 							graph_.AddEdge(edge);
 						}
 					}
-					else {//создание ребра промежуточных остановок	
-						//прямое направление
+					else {//СЃРѕР·РґР°РЅРёРµ СЂРµР±СЂР° РїСЂРѕРјРµР¶СѓС‚РѕС‡РЅС‹С… РѕСЃС‚Р°РЅРѕРІРѕРє
+						//РїСЂСЏРјРѕРµ РЅР°РїСЂР°РІР»РµРЅРёРµ
 						edge.from = waiting_second_st;
 						edge.to = travel_second_st;
 						edge.weight = routing_settings_.bus_wait_time;
 						graph_.AddEdge(edge);
-						//обратное направление
+						//РѕР±СЂР°С‚РЅРѕРµ РЅР°РїСЂР°РІР»РµРЅРёРµ
 						edge.from = travel_second_st;
 						edge.to = waiting_second_st;
 						edge.weight = 0;
@@ -215,7 +215,7 @@ namespace transport {
 				last_step = stop;
 			}
 
-			//создание ребер между остановками
+			//СЃРѕР·РґР°РЅРёРµ СЂРµР±РµСЂ РјРµР¶РґСѓ РѕСЃС‚Р°РЅРѕРІРєР°РјРё
 			if (bus.is_circular) {
 				AddEdgeForCircularRoute(bus);
 			}
@@ -250,7 +250,7 @@ namespace transport {
 		return vertexId_info.at(verdex_id);
 	}
 
-	detail::VertexRange GraphBuilder::FindInVertexIdCounterOrСreate(::transport::detail::Stop* stop, ::transport::detail::Bus* bus) {
+	detail::VertexRange GraphBuilder::FindInVertexIdCounterOrCreate(::transport::detail::Stop* stop, ::transport::detail::Bus* bus) {
 		if (Stop_and_vertexId_.count(stop) != 0) {
 			return { Stop_and_vertexId_.at(stop).waiting,
 					Stop_and_vertexId_.at(stop).travel };

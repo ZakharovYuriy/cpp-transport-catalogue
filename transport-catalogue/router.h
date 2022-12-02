@@ -47,15 +47,6 @@ namespace graph {
         Router<Weight>& operator=(const Router<Weight>& rhs) {
             graph_ = rhs.graph_;
             routes_internal_data_ = rhs.routes_internal_data_;
-            /*
-            InitializeRoutesInternalData(graph_);
-
-            if (graph_ != nullptr) {
-                const size_t vertex_count = graph_->GetVertexCount();
-                for (VertexId vertex_through = 0; vertex_through < vertex_count; ++vertex_through) {
-                    RelaxRoutesInternalDataThroughVertex(vertex_count, vertex_through);
-                }
-            }*/
             return *this;
         }
 
@@ -112,7 +103,6 @@ namespace graph {
 
     template <typename Weight>
     Router<Weight>::Router()
-        //: routes_internal_data_(0, std::vector<std::optional<RouteInternalData>>(0))
     {
         routes_internal_data_.clear();
         graph_ = nullptr;

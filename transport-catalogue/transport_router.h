@@ -67,7 +67,7 @@ namespace transport {
 		}
 
 		Graph& BuildGraph();
-		detail::VertexRange FindInVertexIdCounterOr—reate(::transport::detail::Stop* stop, ::transport::detail::Bus* bus);
+		detail::VertexRange FindInVertexIdCounterOrCreate(::transport::detail::Stop* stop, ::transport::detail::Bus* bus);
 		
 		void StopsAndDistanceCounter(int& number_of_stops, int& distance,
 			::transport::detail::Stop* begore_second_stop, ::transport::detail::Stop* second_stop);

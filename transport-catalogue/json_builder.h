@@ -65,9 +65,9 @@ namespace json {
 
         void StartObject(const Node&&);
         
-        int depth_of_dicts = 0;//текущее количество вложенных словарей
-        int double_key_check = 0;//количество открытых ключей без значения
-        bool last_key_is_empty_ = false;//содержит ли последний ключ значение    
+        int depth_of_dicts = 0;//С‚РµРєСѓС‰РµРµ РєРѕР»РёС‡РµСЃС‚РІРѕ РІР»РѕР¶РµРЅРЅС‹С… СЃР»РѕРІР°СЂРµР№
+        int double_key_check = 0;//РєРѕР»РёС‡РµСЃС‚РІРѕ РѕС‚РєСЂС‹С‚С‹С… РєР»СЋС‡РµР№ Р±РµР· Р·РЅР°С‡РµРЅРёСЏ
+        bool last_key_is_empty_ = false;//СЃРѕРґРµСЂР¶РёС‚ Р»Рё РїРѕСЃР»РµРґРЅРёР№ РєР»СЋС‡ Р·РЅР°С‡РµРЅРёРµ
         bool CheckObjectCompleted();
         bool WrongValuePlace();
     };

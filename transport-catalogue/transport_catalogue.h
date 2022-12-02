@@ -39,11 +39,6 @@ namespace transport {
 		std::deque<::transport::detail::Stop> GetStops() const;
 		std::deque<::transport::detail::Bus> GetBusses() const;
 		std::unordered_map < std::pair<::transport::detail::Stop*, ::transport::detail::Stop*>, int, ::transport::detail::StopHasher > GetLengths() const;
-
-		//void SetStops(std::deque<::transport::detail::Stop> stops);
-		//void SetBusses(std::deque<::transport::detail::Bus> busses);
-		//void SetLengths(std::unordered_map < std::pair<::transport::detail::Stop*, ::transport::detail::Stop*>, int, ::transport::detail::StopHasher > lengths);
-
 	private:		
 		detail::Distance ComputeRealAndMapDistance(const ::transport::detail::Bus& bus) const;
 		std::deque<::transport::detail::Stop> stops_;

@@ -131,7 +131,7 @@ namespace json{
 	}
 
 	detail::DictItemContext Builder::StartDict() {
-		//îòêðûâàåì íîâûé ñëîâàðü- óâåëè÷èâåì ãëóáèíó
+		//Ð¾Ñ‚ÐºÑ€Ñ‹Ð²Ð°ÐµÐ¼ Ð½Ð¾Ð²Ñ‹Ð¹ ÑÐ»Ð¾Ð²Ð°Ñ€ÑŒ- ÑƒÐ²ÐµÐ»Ð¸Ñ‡Ð¸Ð²ÐµÐ¼ Ð³Ð»ÑƒÐ±Ð¸Ð½Ñƒ
 		++depth_of_dicts;
 		
 		StartObject(move(Dict()));
@@ -149,12 +149,12 @@ namespace json{
 		if (CheckObjectCompleted()) {
 			throw std::logic_error("the object is completed");
 		}
-		//ïðîâåðêà íà íåâåðíîå çàêðûòèå
+		//Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ° Ð½Ð° Ð½ÐµÐ²ÐµÑ€Ð½Ð¾Ðµ Ð·Ð°ÐºÑ€Ñ‹Ñ‚Ð¸Ðµ
 		if (main_nodes_stack_.back()->IsArray()) {
 			throw std::logic_error("wrong end of array");
 			return*this;
 		}
-		//çàêðûâàåì íîâûé ñëîâàðü- óìåíüøàåì ãëóáèíó
+		//Ð·Ð°ÐºÑ€Ñ‹Ð²Ð°ÐµÐ¼ Ð½Ð¾Ð²Ñ‹Ð¹ ÑÐ»Ð¾Ð²Ð°Ñ€ÑŒ- ÑƒÐ¼ÐµÐ½ÑŒÑˆÐ°ÐµÐ¼ Ð³Ð»ÑƒÐ±Ð¸Ð½Ñƒ
 		--depth_of_dicts;
 		double_key_check= depth_of_dicts;
 
@@ -184,7 +184,7 @@ namespace json{
 		if (CheckObjectCompleted()) {
 			throw std::logic_error("the object is completed");
 		}
-		//ïðîâåðêà íà íåâåðíîå çàêðûòèå
+		//Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ° Ð½Ð° Ð½ÐµÐ²ÐµÑ€Ð½Ð¾Ðµ Ð·Ð°ÐºÑ€Ñ‹Ñ‚Ð¸Ðµ
 		if (main_nodes_stack_.back()->IsDict()) {
 			throw std::logic_error("wrong end of array");
 			return *this;

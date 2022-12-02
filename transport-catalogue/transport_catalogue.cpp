@@ -203,15 +203,3 @@ void Catalogue::AddStop(const std::string& stop_n, const ::geo::Coordinates&& co
 	std::unordered_map < std::pair<::transport::detail::Stop*, ::transport::detail::Stop*>, int, ::transport::detail::StopHasher > Catalogue::GetLengths() const {
 		return lengths_;
 	}
-/*
-	void Catalogue::SetStops(std::deque<::transport::detail::Stop> stops) {
-		stops_ = stops;
-	}
-
-	void Catalogue::SetBusses(std::deque<::transport::detail::Bus> busses) {
-		busses_ = busses;
-	}
-
-	void Catalogue::SetLengths(std::unordered_map < std::pair<::transport::detail::Stop*, ::transport::detail::Stop*>, int, ::transport::detail::StopHasher > lengths) {
-		lengths_ = lengths;
-	}*/
